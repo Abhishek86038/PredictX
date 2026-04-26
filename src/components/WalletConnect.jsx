@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import * as StellarSdk from 'stellar-sdk';
+import * as FreighterAPI from '@stellar/freighter-api';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
@@ -23,36 +24,40 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // Aggressive detection loop
-      let freighter = null;
-      for (let i = 0; i < 10; i++) {
-        freighter = window.freighterApi || window.stellar?.freighter || window.starlight;
-        if (freighter) break;
-        await new Promise(r => setTimeout(r, 200)); // Wait 200ms between retries
-      }
+      console.log('Hybrid Detection initiated...');
       
-      if (!freighter) {
-        throw new Error('Freighter Wallet not detected in window object. If using Brave, check Wallet settings.');
-      }
+      // Use the API object that successfully opened the popup in your screenshot
+      const api = FreighterAPI;
+      const globalApi = window.freighterApi;
 
       console.log('Requesting permission...');
-      if (freighter.setAllowed) {
-        await freighter.setAllowed();
+      // Try to call setAllowed from anywhere possible
+      if (api.setAllowed) await api.setAllowed();
+      else if (globalApi?.setAllowed) await globalApi.setAllowed();
+      
+      console.log('Permission step passed, fetching public key...');
+      
+      // Try multiple ways to call getPublicKey to avoid "not a function" error
+      let pubKey = null;
+      
+      if (typeof api.getPublicKey === 'function') {
+        pubKey = await api.getPublicKey();
+      } else if (globalApi && typeof globalApi.getPublicKey === 'function') {
+        pubKey = await globalApi.getPublicKey();
+      } else if (api.default && typeof api.default.getPublicKey === 'function') {
+        pubKey = await api.default.getPublicKey();
       }
-      
-      console.log('Getting public key...');
-      const pubKey = await freighter.getPublicKey();
-      
+
       if (pubKey) {
         const balance = await fetchBalance(pubKey);
         setAddress(pubKey);
         onConnect(pubKey, balance);
       } else {
-        throw new Error('User denied or locked');
+        throw new Error('Could not find getPublicKey function or user denied request.');
       }
     } catch (error) {
-      console.error('Aggressive Connection Error:', error);
-      alert(`FINAL PUSH: ${error.message}`);
+      console.error('Hybrid Error:', error);
+      alert(`HYBRID SUCCESS ATTEMPT: ${error.message}. Please click "Connect anyway" if popup is open.`);
     } finally {
       setConnecting(false);
     }
@@ -78,7 +83,7 @@ export default function WalletConnect({ onConnect }) {
           className="connect-btn"
           disabled={connecting}
         >
-          {connecting ? 'Scanning...' : 'Connect Wallet'}
+          {connecting ? 'Checking...' : 'Connect Wallet'}
         </button>
       )}
     </div>
