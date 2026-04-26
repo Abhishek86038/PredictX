@@ -23,15 +23,22 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // 100% Import-free approach using the global object that opened the popup in the screenshot
-      const freighter = window.freighterApi;
+      // Aggressive detection loop
+      let freighter = null;
+      for (let i = 0; i < 10; i++) {
+        freighter = window.freighterApi || window.stellar?.freighter || window.starlight;
+        if (freighter) break;
+        await new Promise(r => setTimeout(r, 200)); // Wait 200ms between retries
+      }
       
       if (!freighter) {
-        throw new Error('Freighter not detected. Please refresh.');
+        throw new Error('Freighter Wallet not detected in window object. If using Brave, check Wallet settings.');
       }
 
       console.log('Requesting permission...');
-      await freighter.setAllowed();
+      if (freighter.setAllowed) {
+        await freighter.setAllowed();
+      }
       
       console.log('Getting public key...');
       const pubKey = await freighter.getPublicKey();
@@ -44,8 +51,8 @@ export default function WalletConnect({ onConnect }) {
         throw new Error('User denied or locked');
       }
     } catch (error) {
-      console.error('Final Error:', error);
-      alert(`SUCCESS IS NEAR! Just click "Connect anyway" in the popup. Error: ${error.message}`);
+      console.error('Aggressive Connection Error:', error);
+      alert(`FINAL PUSH: ${error.message}`);
     } finally {
       setConnecting(false);
     }
@@ -71,7 +78,7 @@ export default function WalletConnect({ onConnect }) {
           className="connect-btn"
           disabled={connecting}
         >
-          {connecting ? 'Popup Open...' : 'Connect Wallet'}
+          {connecting ? 'Scanning...' : 'Connect Wallet'}
         </button>
       )}
     </div>
