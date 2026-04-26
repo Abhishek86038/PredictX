@@ -127,16 +127,16 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
             ))}
           </div>
 
-          <label>Stake Amount (XPOLL)</label>
+          <label>Stake Amount</label>
           <div className="stake-input-container">
             <input
               type="number"
               value={stakeAmount}
               onChange={(e) => setStakeAmount(e.target.value)}
-              placeholder="Min stake 10 XPOLL"
+              placeholder="Enter amount to stake"
               min="1"
             />
-            <span className="balance-text">Balance: {tokenBalance} XPOLL</span>
+            <span className="balance-text">Wallet Balance: {parseFloat(tokenBalance).toFixed(2)} XLM</span>
           </div>
 
           <div className="prediction-buttons">

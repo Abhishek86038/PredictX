@@ -47,8 +47,9 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
       {/* Main Stats */}
       <div className="stats-grid">
         <StatCard
-          title="XPOLL Balance"
-          value={`${tokenBalance.toLocaleString()}`}
+          title="Wallet Balance"
+          value={`${parseFloat(tokenBalance).toFixed(2)}`}
+          subtitle="XLM"
           icon="💰"
           color="#4CAF50"
         />
