@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import * as StellarSdk from 'stellar-sdk';
-import { isConnected, getPublicKey, setAllowed } from '@stellar/freighter-api';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
@@ -24,31 +23,29 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      console.log('Scanning for Freighter...');
+      // 100% Import-free approach using the global object that opened the popup in the screenshot
+      const freighter = window.freighterApi;
       
-      // Try official isConnected check first
-      const connected = await isConnected();
-      let pubKey = null;
-
-      if (connected) {
-        await setAllowed();
-        pubKey = await getPublicKey();
-      } else if (window.freighterApi) {
-        // Fallback to direct global access
-        if (window.freighterApi.setAllowed) await window.freighterApi.setAllowed();
-        pubKey = await window.freighterApi.getPublicKey();
+      if (!freighter) {
+        throw new Error('Freighter not detected. Please refresh.');
       }
 
+      console.log('Requesting permission...');
+      await freighter.setAllowed();
+      
+      console.log('Getting public key...');
+      const pubKey = await freighter.getPublicKey();
+      
       if (pubKey) {
         const balance = await fetchBalance(pubKey);
         setAddress(pubKey);
         onConnect(pubKey, balance);
       } else {
-        throw new Error('Freighter not responding. Is it unlocked and on Testnet?');
+        throw new Error('User denied or locked');
       }
     } catch (error) {
-      console.error('Final Scan Error:', error);
-      alert(`FINAL ATTEMPT ERROR: ${error.message}`);
+      console.error('Final Error:', error);
+      alert(`SUCCESS IS NEAR! Just click "Connect anyway" in the popup. Error: ${error.message}`);
     } finally {
       setConnecting(false);
     }
@@ -74,7 +71,7 @@ export default function WalletConnect({ onConnect }) {
           className="connect-btn"
           disabled={connecting}
         >
-          {connecting ? 'Scanning...' : 'Connect Wallet'}
+          {connecting ? 'Popup Open...' : 'Connect Wallet'}
         </button>
       )}
     </div>
