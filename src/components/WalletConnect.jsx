@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Horizon } from 'stellar-sdk';
-import { isConnected, getPublicKey } from '@stellar/freighter-api';
+import * as Freighter from '@stellar/freighter-api';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
@@ -16,7 +16,7 @@ export default function WalletConnect({ onConnect }) {
       const xlmBalance = account.balances.find(b => b.asset_type === 'native');
       return xpollBalance ? xpollBalance.balance : (xlmBalance ? xlmBalance.balance : '0');
     } catch (err) {
-      console.error('Error fetching balance:', err);
+      console.error('Balance fetch error:', err);
       return '0';
     }
   };
@@ -26,20 +26,23 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // Defensive check for the functions to avoid minification errors
-      const checkConn = typeof isConnected === 'function' ? isConnected : (window.freighterApi ? window.freighterApi.isConnected : null);
-      const getPK = typeof getPublicKey === 'function' ? getPublicKey : (window.freighterApi ? window.freighterApi.getPublicKey : null);
+      // 1. Try to wait for the extension to inject
+      await new Promise(r => setTimeout(r, 800));
 
-      if (!checkConn || !getPK) {
-        throw new Error('Freighter functions not found. Please refresh or check extension.');
+      // 2. Defensive check across all possible injection points
+      const api = window.freighterApi || Freighter;
+      
+      if (!api || typeof api.isConnected !== 'function') {
+        throw new Error('Freighter not detected. Is the extension installed and active?');
       }
 
-      if (!await checkConn()) {
-        throw new Error('Freighter is not connected or locked.');
+      const connected = await api.isConnected();
+      if (!connected) {
+        throw new Error('Freighter found but not connected. Unlock your extension.');
       }
 
-      const pubKey = await getPK();
-      if (!pubKey) throw new Error('Could not retrieve address. Unlock your wallet.');
+      const pubKey = await api.getPublicKey();
+      if (!pubKey) throw new Error('Could not get address. Please unlock and try again.');
 
       const balance = await fetchBalance(pubKey);
       
@@ -48,7 +51,7 @@ export default function WalletConnect({ onConnect }) {
       onConnect(pubKey, parseFloat(balance));
     } catch (err) {
       setError(err.message);
-      console.error('Connection error:', err);
+      console.error('Wallet Error:', err);
     } finally {
       setConnecting(false);
     }
@@ -73,14 +76,14 @@ export default function WalletConnect({ onConnect }) {
             className="connect-btn"
             disabled={connecting}
           >
-            {connecting ? 'Connecting...' : 'Connect Freighter'}
+            {connecting ? 'Searching...' : 'Connect Freighter'}
           </button>
           {error && <div className="wallet-error">{error}</div>}
         </div>
       )}
       <style>{`
         .wallet-connect-container { display: flex; flex-direction: column; align-items: flex-end; }
-        .wallet-error { color: #ff4d4d; font-size: 0.7rem; margin-top: 5px; background: rgba(255, 77, 77, 0.1); padding: 4px 10px; border-radius: 4px; }
+        .wallet-error { color: #ff4d4d; font-size: 0.7rem; margin-top: 5px; background: rgba(255, 77, 77, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(255, 77, 77, 0.2); }
         .connected-wallet { background: #f0f7ff; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 1px solid #d0e7ff; }
         .wallet-address { font-family: monospace; font-weight: 700; color: #0066CC; }
         .disconnect-btn { background: none; border: none; color: #666; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0; }
