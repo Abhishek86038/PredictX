@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getUserPredictions } from '../services/predictionService';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { settlePrediction, getUserPredictions } from '../services/predictionService';
+import { getPriceData } from '../services/priceService';
 
 export default function MyPredictions({ walletAddress }) {
   const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [settlingId, setSettlingId] = useState(null);
   const [filter, setFilter] = useState('active'); // active, settled
 
   const fetchPredictions = useCallback(async () => {
-    setLoading(true);
     try {
       const data = await getUserPredictions(walletAddress, filter);
       setPredictions(data);
@@ -24,6 +23,19 @@ export default function MyPredictions({ walletAddress }) {
       fetchPredictions();
     }
   }, [walletAddress, fetchPredictions]);
+
+  const handleSettle = async (id, crypto) => {
+    try {
+      setSettlingId(id);
+      const priceData = await getPriceData(crypto);
+      await settlePrediction(id, priceData.usd);
+      await fetchPredictions();
+    } catch (error) {
+      console.error('Settlement error:', error);
+    } finally {
+      setSettlingId(null);
+    }
+  };
 
   return (
     <div className="my-predictions-container">
@@ -97,7 +109,19 @@ export default function MyPredictions({ walletAddress }) {
                 ) : (
                   <div className="live-box">
                     <div className="live-label">LIVE</div>
-                    <div className="live-timer">Processing...</div>
+                    {new Date(pred.createdAt).getTime() + pred.timeframe * 60000 < Date.now() ? (
+                      <button 
+                        className="btn-settle"
+                        onClick={() => handleSettle(pred.id, pred.crypto)}
+                        disabled={settlingId === pred.id}
+                      >
+                        {settlingId === pred.id ? 'Settling...' : 'Settle Now'}
+                      </button>
+                    ) : (
+                      <div className="live-timer">
+                        Ends in {Math.round(((new Date(pred.createdAt).getTime() + pred.timeframe * 60000) - Date.now()) / 60000)}m
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

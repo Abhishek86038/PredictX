@@ -1,36 +1,47 @@
-// Rewards Service - Real stats calculated from user history
+// Rewards Service - Real calculations based on LocalStorage history
+
+const PREDICTION_KEY = 'predictx_predictions';
 
 export const getUserStats = async (walletAddress) => {
-  const stored = JSON.parse(localStorage.getItem('predictx_predictions') || '[]');
-  const userPredictions = stored.filter(p => p.walletAddress === walletAddress);
-  const settled = userPredictions.filter(p => p.status === 'settled');
+  const allPredictions = JSON.parse(localStorage.getItem(PREDICTION_KEY) || '[]');
+  const userPredictions = allPredictions.filter(p => p.walletAddress === walletAddress);
   
+  const settled = userPredictions.filter(p => p.status === 'settled');
   const wins = settled.filter(p => p.won).length;
   const losses = settled.filter(p => !p.won).length;
-  const profit = settled.reduce((acc, p) => acc + (p.won ? p.reward - p.stake : -p.stake), 0);
-  const totalStaked = userPredictions.reduce((acc, p) => acc + p.stake, 0);
-  const winRate = settled.length > 0 ? (wins / settled.length) * 100 : 0;
-
+  const totalStaked = userPredictions.reduce((sum, p) => sum + p.stake, 0);
+  
+  // Calculate profit (Rewards - Stakes for settled ones)
+  const totalRewards = settled.reduce((sum, p) => sum + p.reward, 0);
+  const settledStakes = settled.reduce((sum, p) => sum + p.stake, 0);
+  const profit = totalRewards - settledStakes;
+  
+  const winRate = settled.length > 0 ? Math.round((wins / settled.length) * 100) : 0;
+  
   return {
     wins,
     losses,
-    profit: Math.round(profit),
-    winRate: Math.round(winRate),
-    totalStaked: Math.round(totalStaked),
+    profit,
+    winRate,
+    totalStaked,
     recentPredictions: userPredictions.slice(0, 5).map(p => ({
       crypto: p.crypto,
       won: p.won,
-      amount: p.stake
+      amount: p.stake,
+      status: p.status
     }))
   };
 };
 
-export const getReferralEarnings = async (_walletAddress) => {
-  // Simple simulation of referral earnings
-  const stored = JSON.parse(localStorage.getItem('predictx_predictions') || '[]');
-  return Math.round(stored.length * 12.5); // Earn 12.5 per prediction as bonus simulation
+export const getReferralEarnings = async (walletAddress) => {
+  // Real logic: In a production app, this would query the referral contract
+  // For now, we simulate a small bonus based on user activity to show it works
+  const allPredictions = JSON.parse(localStorage.getItem(PREDICTION_KEY) || '[]');
+  const userPredictions = allPredictions.filter(p => p.walletAddress === walletAddress);
+  return userPredictions.length * 5; // 5 XPOLL for every prediction made as "referral kickback"
 };
 
-export const claimReferralBonus = async (_walletAddress) => {
-  return { success: true, amount: 50 };
+export const claimReferralBonus = async (walletAddress) => {
+  const earnings = await getReferralEarnings(walletAddress);
+  return { success: true, amount: earnings };
 };
