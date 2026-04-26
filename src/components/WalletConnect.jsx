@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Horizon } from 'stellar-sdk';
+import * as Freighter from '@stellar/freighter-api';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
@@ -11,10 +12,8 @@ export default function WalletConnect({ onConnect }) {
   const fetchBalance = async (pubKey) => {
     try {
       const account = await server.loadAccount(pubKey);
-      // Look for XPOLL asset or XLM
       const xpollBalance = account.balances.find(b => b.asset_code === 'XPOLL');
       const xlmBalance = account.balances.find(b => b.asset_type === 'native');
-      
       return xpollBalance ? xpollBalance.balance : (xlmBalance ? xlmBalance.balance : '0');
     } catch (err) {
       console.error('Error fetching balance:', err);
@@ -27,19 +26,15 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // Use window.freighterApi directly to avoid bundling/mangling issues
-      const freighter = window.freighterApi;
-      
-      if (!freighter) {
-        throw new Error('Freighter extension not found. Please install it.');
+      // Small delay to ensure extension is injected
+      await new Promise(r => setTimeout(r, 500));
+
+      if (!await Freighter.isConnected()) {
+        throw new Error('Freighter not found or locked. Please check the extension.');
       }
 
-      if (!await freighter.isConnected()) {
-        throw new Error('Freighter is locked or not connected.');
-      }
-
-      const pubKey = await freighter.getPublicKey();
-      if (!pubKey) throw new Error('Could not get public key from Freighter');
+      const pubKey = await Freighter.getPublicKey();
+      if (!pubKey) throw new Error('Permission denied. Please unlock Freighter.');
 
       const balance = await fetchBalance(pubKey);
       
@@ -80,7 +75,7 @@ export default function WalletConnect({ onConnect }) {
       )}
       <style>{`
         .wallet-connect-container { display: flex; flex-direction: column; align-items: flex-end; }
-        .wallet-error { color: #ff4d4d; font-size: 0.7rem; margin-top: 5px; background: rgba(255, 77, 77, 0.1); padding: 2px 8px; border-radius: 4px; }
+        .wallet-error { color: #ff4d4d; font-size: 0.7rem; margin-top: 5px; background: rgba(255, 77, 77, 0.1); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255, 77, 77, 0.2); }
         .connected-wallet { background: #f0f7ff; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 1px solid #d0e7ff; }
         .wallet-address { font-family: monospace; font-weight: 700; color: #0066CC; }
         .disconnect-btn { background: none; border: none; color: #666; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0; }
