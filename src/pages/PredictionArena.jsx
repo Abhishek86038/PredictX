@@ -1,18 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import PriceChart from '../components/PriceChart';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { getPriceData } from '../services/priceService';
 import { createPrediction } from '../services/predictionService';
+import { getPriceData } from '../services/priceService';
+import ToastNotification from '../components/ToastNotification';
+import PriceChart from '../components/PriceChart';
 
 export default function PredictionArena({ walletAddress, tokenBalance }) {
   const [selectedCrypto, setSelectedCrypto] = useState('bitcoin');
   const [selectedTimeframe, setSelectedTimeframe] = useState(60);
   const [stakeAmount, setStakeAmount] = useState('');
+  const [prediction, setPrediction] = useState(null);
   const [currentPrice, setCurrentPrice] = useState(0);
-  const [priceChange24h, setPriceChange24h] = useState(0);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
-  const [prediction, setPrediction] = useState(null);
+  const [priceChange24h, setPriceChange24h] = useState(0);
 
   const timeframes = [
     { label: '1 hour', value: 60 },
@@ -33,25 +33,18 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
 
   useEffect(() => {
     fetchPrice();
-    const interval = setInterval(fetchPrice, 60000); 
+    const interval = setInterval(fetchPrice, 60000); // Updated to 60 seconds to avoid API rate limits
     return () => clearInterval(interval);
   }, [fetchPrice]);
 
   const handleCreatePrediction = async (direction) => {
-    if (!walletAddress) {
-      setNotification({ type: 'error', message: 'Please connect your wallet first' });
-      return;
-    }
-
     if (!stakeAmount || stakeAmount <= 0) {
       setNotification({ type: 'error', message: 'Enter valid stake amount' });
       return;
     }
 
-    // Convert balance to number for comparison
-    const currentBalance = parseFloat(tokenBalance);
-    if (parseFloat(stakeAmount) > currentBalance) {
-      setNotification({ type: 'error', message: `Insufficient balance. You have ${currentBalance} XLM.` });
+    if (stakeAmount > tokenBalance) {
+      setNotification({ type: 'error', message: 'Insufficient XPOLL balance' });
       return;
     }
 
@@ -78,7 +71,7 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
 
       setNotification({
         type: 'success',
-        message: `Prediction created! Staked ${stakeAmount} XLM on ${direction.toUpperCase()}`
+        message: `Prediction created! Staked ${stakeAmount} XPOLL on ${direction.toUpperCase()}`
       });
 
       setStakeAmount('');
@@ -93,31 +86,26 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
     <div className="prediction-arena-container">
       <header className="page-header">
         <h2>Prediction Arena</h2>
-        <p className="page-subtitle">Predict market trends and earn rewards using your XLM</p>
+        <p className="page-subtitle">Predict the market trend and earn XPOLL rewards</p>
       </header>
 
-      {notification && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-          <button onClick={() => setNotification(null)}>×</button>
-        </div>
-      )}
-
-      <div className="arena-grid">
-        <div className="chart-section">
-          <div className="price-display">
-            <div className="price-card">
-              <h3>{selectedCrypto.toUpperCase()} / USD</h3>
-              <div className="price-main">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-              <div className={`price-change ${priceChange24h >= 0 ? 'up' : 'down'}`}>
-                {priceChange24h >= 0 ? '↑' : '↓'} {Math.abs(priceChange24h).toFixed(2)}% (24h)
-              </div>
-            </div>
+      {/* Price Display */}
+      <div className="price-display">
+        <div className="price-card">
+          <h3>{selectedCrypto.toUpperCase()}</h3>
+          <div className="price-main">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          <div className={`price-change ${priceChange24h >= 0 ? 'up' : 'down'}`}>
+            {priceChange24h >= 0 ? '↑' : '↓'} {Math.abs(priceChange24h).toFixed(2)}% (24h)
           </div>
-          <PriceChart cryptoId={selectedCrypto} />
         </div>
 
-        <div className="action-section">
+        {/* Chart */}
+        <PriceChart cryptoId={selectedCrypto} />
+      </div>
+
+      {/* Prediction Setup */}
+      <div className="prediction-setup">
+        <div className="setup-card">
           <label>Select Asset</label>
           <select value={selectedCrypto} onChange={(e) => setSelectedCrypto(e.target.value)}>
             <option value="bitcoin">Bitcoin (BTC)</option>
@@ -139,45 +127,80 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
             ))}
           </div>
 
-          <label>Stake Amount (XLM)</label>
+          <label>Stake Amount (XPOLL)</label>
           <div className="stake-input-container">
             <input
               type="number"
               value={stakeAmount}
               onChange={(e) => setStakeAmount(e.target.value)}
-              placeholder="Min stake 1 XLM"
+              placeholder="Min stake 10 XPOLL"
               min="1"
             />
-            <span className="balance-text">STARK SYNC: {parseFloat(tokenBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })} XLM</span>
+            <span className="balance-text">Balance: {tokenBalance} XPOLL</span>
           </div>
 
           <div className="prediction-buttons">
-            <button 
-              className="predict-up" 
+            <button
+              className="predict-up"
               onClick={() => handleCreatePrediction('up')}
               disabled={loading}
             >
-              {loading ? '...' : '📈 Predict UP'}
+              {loading ? 'Processing...' : '📈 Predict UP'}
             </button>
-            <button 
-              className="predict-down" 
+            <button
+              className="predict-down"
               onClick={() => handleCreatePrediction('down')}
               disabled={loading}
             >
-              {loading ? '...' : '📉 Predict DOWN'}
+              {loading ? 'Processing...' : '📉 Predict DOWN'}
             </button>
           </div>
+        </div>
 
-          {prediction && (
-            <div className="active-prediction-card">
-              <h4>Current Trade</h4>
-              <p>{prediction.crypto.toUpperCase()} {prediction.direction.toUpperCase()}</p>
-              <p>Entry: ${prediction.startPrice.toLocaleString()}</p>
-              <div className="status-badge">LIVE</div>
+        {/* Current Prediction Status */}
+        <div className="prediction-info-panel">
+          {prediction ? (
+            <div className="prediction-status active">
+              <h4>🎯 Active Prediction</h4>
+              <div className="status-grid">
+                <div className="status-item">
+                  <span className="label">Asset</span>
+                  <span className="value">{prediction.crypto.toUpperCase()}</span>
+                </div>
+                <div className="status-item">
+                  <span className="label">Direction</span>
+                  <span className={`value ${prediction.direction}`}>{prediction.direction.toUpperCase()}</span>
+                </div>
+                <div className="status-item">
+                  <span className="label">Entry Price</span>
+                  <span className="value">${prediction.startPrice.toFixed(2)}</span>
+                </div>
+                <div className="status-item">
+                  <span className="label">Ends In</span>
+                  <span className="value">{prediction.timeframe}m</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="prediction-status empty">
+              <h4>No active prediction</h4>
+              <p>Choose an asset and timeframe to start earning.</p>
+              <div className="mini-stats">
+                <span>🏆 Total Rewards: 124.5k XPOLL</span>
+                <span>🔥 Active Players: 842</span>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {notification && (
+        <ToastNotification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }

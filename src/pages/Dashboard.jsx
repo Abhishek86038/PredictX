@@ -1,18 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getUserStats, getReferralEarnings } from '../services/rewardsService';
+import StatCard from '../components/StatCard';
+import ReferralWidget from '../components/ReferralWidget';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { getUserStats } from '../services/rewardsService';
 
 export default function Dashboard({ walletAddress, tokenBalance }) {
   const [stats, setStats] = useState(null);
+  const [referralEarnings, setReferralEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = useCallback(async () => {
     try {
-      setLoading(true);
-      const data = await getUserStats(walletAddress);
-      setStats(data);
+      const userStats = await getUserStats(walletAddress);
+      setStats(userStats);
+
+      const refEarnings = await getReferralEarnings(walletAddress);
+      setReferralEarnings(refEarnings);
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching stats:', error);
     } finally {
       setLoading(false);
     }
@@ -26,9 +31,9 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
     }
   }, [walletAddress, fetchStats]);
 
-  if (loading && !stats) return <LoadingSpinner size="lg" />;
+  if (loading) return <LoadingSpinner size="lg" />;
 
-  const roi = stats?.totalStaked > 0 
+  const roi = stats.totalStaked > 0 
     ? ((stats.profit / stats.totalStaked) * 100).toFixed(2)
     : 0;
 
@@ -36,97 +41,93 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
     <div className="dashboard-container">
       <header className="page-header">
         <h2>Dashboard</h2>
-        <p className="page-subtitle">Your real-time prediction performance (Powered by Stellar)</p>
+        <p className="page-subtitle">Your personal prediction performance and rewards</p>
       </header>
 
-      {!walletAddress ? (
-        <div className="connect-prompt">
-          <p>Please connect your wallet to view your personalized dashboard.</p>
-        </div>
-      ) : (
-        <>
-          {/* Main Stats */}
-          <div className="stats-grid">
-            <StatCard
-              title="Wallet Balance"
-              value={`${parseFloat(tokenBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-              subtitle="XLM (Stellar Native)"
-              icon="💰"
-              color="#4CAF50"
-            />
-            <StatCard
-              title="Net Profit"
-              value={`${stats?.profit.toLocaleString()}`}
-              subtitle="XLM"
-              icon={stats?.profit >= 0 ? '📈' : '📉'}
-              color={stats?.profit >= 0 ? '#4CAF50' : '#F44336'}
-            />
-            <StatCard
-              title="Win Rate"
-              value={`${stats?.winRate}%`}
-              subtitle={`${stats?.wins}W - ${stats?.losses}L`}
-              icon="🎯"
-              color="#2196F3"
-            />
-            <StatCard
-              title="Return on Investment"
-              value={`${roi}%`}
-              subtitle="Overall ROI"
-              icon="📊"
-              color="#9C27B0"
-            />
-          </div>
+      {/* Main Stats */}
+      <div className="stats-grid">
+        <StatCard
+          title="XPOLL Balance"
+          value={`${tokenBalance.toLocaleString()}`}
+          icon="💰"
+          color="#4CAF50"
+        />
+        <StatCard
+          title="Net Profit"
+          value={`${stats.profit.toLocaleString()}`}
+          subtitle="XPOLL"
+          icon={stats.profit >= 0 ? '📈' : '📉'}
+          color={stats.profit >= 0 ? '#4CAF50' : '#F44336'}
+        />
+        <StatCard
+          title="Win Rate"
+          value={`${stats.winRate}%`}
+          icon="🎯"
+          color="#0066CC"
+        />
+        <StatCard
+          title="Estimated ROI"
+          value={`${roi}%`}
+          icon="💹"
+          color="#FF9800"
+        />
+      </div>
 
-          {/* Activity Section */}
-          <div className="dashboard-content">
-            <div className="recent-activity">
-              <h3>Recent Predictions</h3>
-              {stats?.recentPredictions.length > 0 ? (
-                <div className="activity-list">
-                  {stats.recentPredictions.map((p, i) => (
-                    <div key={i} className="activity-item">
-                      <div className="activity-info">
-                        <span className="crypto-tag">{p.crypto.toUpperCase()}</span>
-                        <span className="activity-date">Amount: {p.amount} XLM</span>
-                      </div>
-                      <div className={`activity-result ${p.won === null ? 'pending' : (p.won ? 'won' : 'lost')}`}>
-                        {p.won === null ? 'LIVE' : (p.won ? '+$' + (p.amount * 0.9).toFixed(2) : '-$' + p.amount)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-state">No recent activity found.</div>
-              )}
-            </div>
-
-            <div className="rewards-section">
-              <h3>Available Rewards</h3>
-              <div className="rewards-card">
-                <div className="reward-info">
-                  <span className="reward-label">Staking Bonus</span>
-                  <span className="reward-value">0.00 XLM</span>
-                </div>
-                <button className="claim-btn" disabled>Claim Rewards</button>
+      <div className="dashboard-content-grid">
+        <div className="left-column">
+          {/* Prediction Stats */}
+          <section className="stats-section card">
+            <h3>Prediction History</h3>
+            <div className="stats-breakdown">
+              <div className="breakdown-item">
+                <span className="label">Total Predictions</span>
+                <span className="value">{stats.wins + stats.losses}</span>
+              </div>
+              <div className="breakdown-item">
+                <span className="label text-success">Wins</span>
+                <span className="value text-success">{stats.wins}</span>
+              </div>
+              <div className="breakdown-item">
+                <span className="label text-danger">Losses</span>
+                <span className="value text-danger">{stats.losses}</span>
+              </div>
+              <div className="breakdown-item">
+                <span className="label">Total Staked</span>
+                <span className="value">{stats.totalStaked} XPOLL</span>
               </div>
             </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+          </section>
 
-function StatCard({ title, value, subtitle, icon, color }) {
-  return (
-    <div className="stat-card">
-      <div className="stat-icon" style={{ backgroundColor: `${color}15`, color: color }}>
-        {icon}
-      </div>
-      <div className="stat-details">
-        <span className="stat-title">{title}</span>
-        <h3 className="stat-value">{value}</h3>
-        {subtitle && <span className="stat-subtitle">{subtitle}</span>}
+          {/* Recent Predictions */}
+          <section className="recent-section card">
+            <h3>Recent Activity</h3>
+            {stats.recentPredictions && stats.recentPredictions.length > 0 ? (
+              <ul className="recent-list">
+                {stats.recentPredictions.map((pred, idx) => (
+                  <li key={idx} className="recent-item">
+                    <div className="recent-info">
+                      <span className="recent-crypto">{pred.crypto.toUpperCase()}</span>
+                      <span className="recent-time">2 hours ago</span>
+                    </div>
+                    <span className={`recent-result ${pred.won ? 'won' : 'lost'}`}>
+                      {pred.won ? `+${pred.amount}` : `-${pred.amount}`} XPOLL
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-data">No recent predictions found</p>
+            )}
+          </section>
+        </div>
+
+        <div className="right-column">
+          {/* Referral Widget */}
+          <ReferralWidget
+            walletAddress={walletAddress}
+            referralEarnings={referralEarnings}
+          />
+        </div>
       </div>
     </div>
   );
