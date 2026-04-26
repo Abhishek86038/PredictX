@@ -148,7 +148,7 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
               placeholder="Min stake 1 XLM"
               min="1"
             />
-            <span className="balance-text">Available: {parseFloat(tokenBalance).toFixed(2)} XLM</span>
+            <span className="balance-text">STARK SYNC: {parseFloat(tokenBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })} XLM</span>
           </div>
 
           <div className="prediction-buttons">
