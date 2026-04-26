@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Horizon } from 'stellar-sdk';
-import * as Freighter from '@stellar/freighter-api';
+import { isConnected, getPublicKey } from '@stellar/freighter-api';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
@@ -26,15 +26,20 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // Small delay to ensure extension is injected
-      await new Promise(r => setTimeout(r, 500));
+      // Defensive check for the functions to avoid minification errors
+      const checkConn = typeof isConnected === 'function' ? isConnected : (window.freighterApi ? window.freighterApi.isConnected : null);
+      const getPK = typeof getPublicKey === 'function' ? getPublicKey : (window.freighterApi ? window.freighterApi.getPublicKey : null);
 
-      if (!await Freighter.isConnected()) {
-        throw new Error('Freighter not found or locked. Please check the extension.');
+      if (!checkConn || !getPK) {
+        throw new Error('Freighter functions not found. Please refresh or check extension.');
       }
 
-      const pubKey = await Freighter.getPublicKey();
-      if (!pubKey) throw new Error('Permission denied. Please unlock Freighter.');
+      if (!await checkConn()) {
+        throw new Error('Freighter is not connected or locked.');
+      }
+
+      const pubKey = await getPK();
+      if (!pubKey) throw new Error('Could not retrieve address. Unlock your wallet.');
 
       const balance = await fetchBalance(pubKey);
       
@@ -75,7 +80,7 @@ export default function WalletConnect({ onConnect }) {
       )}
       <style>{`
         .wallet-connect-container { display: flex; flex-direction: column; align-items: flex-end; }
-        .wallet-error { color: #ff4d4d; font-size: 0.7rem; margin-top: 5px; background: rgba(255, 77, 77, 0.1); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255, 77, 77, 0.2); }
+        .wallet-error { color: #ff4d4d; font-size: 0.7rem; margin-top: 5px; background: rgba(255, 77, 77, 0.1); padding: 4px 10px; border-radius: 4px; }
         .connected-wallet { background: #f0f7ff; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 1px solid #d0e7ff; }
         .wallet-address { font-family: monospace; font-weight: 700; color: #0066CC; }
         .disconnect-btn { background: none; border: none; color: #666; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0; }
