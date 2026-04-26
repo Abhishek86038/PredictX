@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as Freighter from '@stellar/freighter-api';
+import { getPublicKey, setAllowed } from '@stellar/freighter-api';
 import * as StellarSdk from 'stellar-sdk';
 
 export default function WalletConnect({ onConnect }) {
@@ -8,7 +8,6 @@ export default function WalletConnect({ onConnect }) {
 
   const fetchBalance = async (pubKey) => {
     try {
-      // Use named export or object access based on package version
       const Server = StellarSdk.Server || StellarSdk.default?.Server;
       const server = new Server('https://horizon-testnet.stellar.org');
       
@@ -17,7 +16,6 @@ export default function WalletConnect({ onConnect }) {
       return nativeBalance ? nativeBalance.balance : '0';
     } catch (e) {
       console.error('Balance fetch error:', e);
-      // If it's a 404, it means the account isn't funded yet on Testnet
       if (e.response?.status === 404) return '0 (Not Funded)';
       return '0';
     }
@@ -28,25 +26,25 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      console.log('Requesting permission...');
-      const allowed = await Freighter.setAllowed();
+      console.log('Requesting permission via setAllowed...');
+      const allowed = await setAllowed();
       
       if (allowed) {
-        const pubKey = await Freighter.getPublicKey();
+        console.log('Permission granted, getting public key...');
+        const pubKey = await getPublicKey();
         if (pubKey) {
-          console.log('Got PubKey:', pubKey);
           const balance = await fetchBalance(pubKey);
           setAddress(pubKey);
           onConnect(pubKey, balance);
         } else {
-          throw new Error('User denied public key request');
+          throw new Error('Could not retrieve Public Key');
         }
       } else {
         throw new Error('Permission denied by user');
       }
     } catch (error) {
-      console.error('Final Connection Error:', error);
-      alert(`Connection Failed: ${error.message || 'Unknown error'}. Please make sure Freighter is unlocked.`);
+      console.error('Detailed Connection Error:', error);
+      alert(`Connection Failed: ${error.message}. Please make sure Freighter is unlocked and try again.`);
     } finally {
       setConnecting(false);
     }
@@ -72,7 +70,7 @@ export default function WalletConnect({ onConnect }) {
           className="connect-btn"
           disabled={connecting}
         >
-          {connecting ? 'Checking Wallet...' : 'Connect Wallet'}
+          {connecting ? 'Checking Freighter...' : 'Connect Wallet'}
         </button>
       )}
     </div>
