@@ -1,3 +1,4 @@
+// XPOLL Predictor - Production Ready v1.0
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import WalletConnect from './components/WalletConnect';
