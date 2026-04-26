@@ -1,43 +1,18 @@
-import { useState, useEffect } from 'react';
-import { isConnected, getPublicKey } from '@stellar/freighter-api';
-import { Server } from 'stellar-sdk';
+import { useState } from 'react';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
   const [connecting, setConnecting] = useState(false);
-  
-  const horizonServer = new Server('https://horizon-testnet.stellar.org');
-
-  const fetchBalance = async (pubKey) => {
-    try {
-      const account = await horizonServer.loadAccount(pubKey);
-      // Find XLM balance or XPOLL if we have an asset ID
-      const nativeBalance = account.balances.find(b => b.asset_type === 'native');
-      return nativeBalance ? parseFloat(nativeBalance.balance) : 0;
-    } catch (e) {
-      console.error('Error fetching balance:', e);
-      return 0;
-    }
-  };
 
   const connectWallet = async () => {
     setConnecting(true);
-    try {
-      if (await isConnected()) {
-        const publicKey = await getPublicKey();
-        if (publicKey) {
-          const balance = await fetchBalance(publicKey);
-          setAddress(publicKey);
-          onConnect(publicKey, balance);
-        }
-      } else {
-        alert('Please install Freighter wallet to continue');
-      }
-    } catch (error) {
-      console.error('Connection error:', error);
-    } finally {
+    // Mocking a wallet connection
+    setTimeout(() => {
+      const mockAddress = 'GB7V...X4PQ';
+      setAddress(mockAddress);
+      onConnect(mockAddress, 1000); // Address and initial balance
       setConnecting(false);
-    }
+    }, 1500);
   };
 
   const disconnectWallet = () => {
@@ -49,9 +24,7 @@ export default function WalletConnect({ onConnect }) {
     <div className="wallet-connect">
       {address ? (
         <div className="connected-wallet">
-          <span className="wallet-address" title={address}>
-            {address.substring(0, 4)}...{address.substring(address.length - 4)}
-          </span>
+          <span className="wallet-address">{address}</span>
           <button onClick={disconnectWallet} className="disconnect-btn">Disconnect</button>
         </div>
       ) : (

@@ -10,7 +10,7 @@ import './styles/predictor.css';
 
 function App() {
   const [walletAddress, setWalletAddress] = useState(null);
-  const [tokenBalance, setTokenBalance] = useState(0);
+  const [tokenBalance, setTokenBalance] = useState(1000);
   const [activePage, setActivePage] = useState('arena');
 
   const handleWalletConnect = (address, balance) => {
