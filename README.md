@@ -1,5 +1,17 @@
 # 🎯 XPOLL Predictor - Level 5 Blue Belt
 
+## 🚀 Live Production Status
+- **Live URL**: [https://predict-x-pied.vercel.app](https://predict-x-pied.vercel.app)
+- **GitHub Actions**: ✅ Passing (with Vercel Secrets)
+- **Stellar Network**: Testnet
+
+### ⛓️ Live Contract IDs
+- **Oracle**: `CCMFDN5NULZ4NNQC7JEPHFJBNAVP4SWVNTDDPYNBJEYZAVDW73A6Z32W`
+- **Staking**: `CAJDJSF6MADCT76UX572H7X4PFPBPHW22F2MNZ7ARAOLENPBYABOHY63`
+- **Rewards**: `CCXFPKYSLQYEG27NYV722GFWYCVLNXRJ5SBW6KC2QE5LJILQR7HKXVY3`
+
+---
+
 Real-time cryptocurrency price prediction platform with gamification, leaderboards, and token rewards on Stellar.
 
 ## ✅ Level 5 Requirements (ALL MET)
