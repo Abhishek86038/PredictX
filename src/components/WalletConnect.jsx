@@ -9,13 +9,23 @@ export default function WalletConnect({ onConnect }) {
 
   const fetchBalance = async (pubKey) => {
     try {
-      const Server = StellarSdk.Server || StellarSdk.default?.Server;
-      const server = new Server('https://horizon-testnet.stellar.org');
-      const account = await server.loadAccount(pubKey);
-      const nativeBalance = account.balances.find(b => b.asset_type === 'native');
-      return nativeBalance ? nativeBalance.balance : '0';
+      // Try Testnet first
+      const serverTest = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+      try {
+        const account = await serverTest.loadAccount(pubKey);
+        const native = account.balances.find(b => b.asset_type === 'native');
+        if (native) return native.balance;
+      } catch (e) {
+        console.log('Not on Testnet, trying Mainnet...');
+      }
+
+      // Try Mainnet as fallback
+      const serverMain = new StellarSdk.Server('https://horizon.stellar.org');
+      const accountMain = await serverMain.loadAccount(pubKey);
+      const nativeMain = accountMain.balances.find(b => b.asset_type === 'native');
+      return nativeMain ? nativeMain.balance : '0';
     } catch (e) {
-      console.error('Balance fetch error:', e);
+      console.error('Final Balance fetch error:', e);
       return '0';
     }
   };
@@ -25,34 +35,23 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // Aggressive retry to find ANY wallet global
-      let freighter = null;
-      for (let i = 0; i < 20; i++) {
-        freighter = window.freighterApi || window.FreighterApi || window.stellar?.freighter;
-        if (freighter) break;
-        await new Promise(r => setTimeout(r, 150));
-      }
+      let freighter = window.freighterApi || window.FreighterApi || window.stellar?.freighter;
       
       if (!freighter) {
         setShowManual(true);
-        throw new Error('Wallet not detected. You can enter your address manually below if the extension is blocked.');
+        throw new Error('Wallet not detected. Using manual fallback.');
       }
 
-      console.log('Requesting permission...');
-      if (freighter.setAllowed) await freighter.setAllowed();
-      
-      console.log('Fetching public key...');
+      await freighter.setAllowed();
       const pubKey = await freighter.getPublicKey();
       
       if (pubKey) {
         const balance = await fetchBalance(pubKey);
+        alert(`Connected! Found ${balance} XLM`);
         setAddress(pubKey);
         onConnect(pubKey, balance);
-      } else {
-        throw new Error('Could not get Public Key. Ensure Freighter is unlocked.');
       }
     } catch (error) {
-      console.error('Final Error:', error);
       alert(`NOTICE: ${error.message}`);
     } finally {
       setConnecting(false);
@@ -62,6 +61,7 @@ export default function WalletConnect({ onConnect }) {
   const handleManualConnect = async () => {
     if (manualAddress && manualAddress.startsWith('G')) {
       const balance = await fetchBalance(manualAddress);
+      alert(`Manual Connect! Found ${balance} XLM`);
       setAddress(manualAddress);
       onConnect(manualAddress, balance);
     } else {
@@ -86,19 +86,15 @@ export default function WalletConnect({ onConnect }) {
         </div>
       ) : (
         <div className="connection-controls">
-          <button 
-            onClick={connectWallet} 
-            className="connect-btn"
-            disabled={connecting}
-          >
-            {connecting ? 'Scanning...' : 'Connect Wallet'}
+          <button onClick={connectWallet} className="connect-btn" disabled={connecting}>
+            {connecting ? 'Checking...' : 'Connect Wallet'}
           </button>
           
           {showManual && (
             <div className="manual-entry">
               <input 
                 type="text" 
-                placeholder="Or paste Public Key (G...)" 
+                placeholder="Paste Address (G...)" 
                 value={manualAddress}
                 onChange={(e) => setManualAddress(e.target.value)}
                 className="manual-input"
