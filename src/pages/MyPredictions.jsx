@@ -1,5 +1,7 @@
+import { useState, useEffect, useCallback } from 'react';
 import { settlePrediction, getUserPredictions } from '../services/predictionService';
 import { getPriceData } from '../services/priceService';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function MyPredictions({ walletAddress }) {
   const [predictions, setPredictions] = useState([]);
