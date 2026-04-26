@@ -12,6 +12,11 @@
 
 ---
 
+## 📸 App Preview
+<!-- Replace the URL below with your actual screenshot path -->
+![XPOLL Predictor Preview](https://via.placeholder.com/800x450?text=PredictX+Dashboard+Preview)
+
+
 Real-time cryptocurrency price prediction platform with gamification, leaderboards, and token rewards on Stellar.
 
 ## ✅ Level 5 Requirements (ALL MET)
