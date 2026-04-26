@@ -8,12 +8,17 @@ export default function WalletConnect({ onConnect }) {
 
   const fetchBalance = async (pubKey) => {
     try {
-      const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+      // Use named export or object access based on package version
+      const Server = StellarSdk.Server || StellarSdk.default?.Server;
+      const server = new Server('https://horizon-testnet.stellar.org');
+      
       const account = await server.loadAccount(pubKey);
       const nativeBalance = account.balances.find(b => b.asset_type === 'native');
       return nativeBalance ? nativeBalance.balance : '0';
     } catch (e) {
-      console.error('Error fetching balance:', e);
+      console.error('Balance fetch error:', e);
+      // If it's a 404, it means the account isn't funded yet on Testnet
+      if (e.response?.status === 404) return '0 (Not Funded)';
       return '0';
     }
   };
@@ -23,37 +28,25 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // 1. Request Permission first (Crucial for modern Freighter)
-      console.log('Requesting permission from Freighter...');
-      const isAllowed = await Freighter.setAllowed();
+      console.log('Requesting permission...');
+      const allowed = await Freighter.setAllowed();
       
-      if (isAllowed) {
-        // 2. Once allowed, get the public key
+      if (allowed) {
         const pubKey = await Freighter.getPublicKey();
         if (pubKey) {
+          console.log('Got PubKey:', pubKey);
           const balance = await fetchBalance(pubKey);
           setAddress(pubKey);
           onConnect(pubKey, balance);
+        } else {
+          throw new Error('User denied public key request');
         }
       } else {
-        alert('Permission denied. Please allow this site in your Freighter settings.');
+        throw new Error('Permission denied by user');
       }
     } catch (error) {
-      console.error('Connection Error:', error);
-      // Fallback for some versions of Freighter
-      try {
-        const pubKey = await Freighter.getPublicKey();
-        if (pubKey) {
-          const balance = await fetchBalance(pubKey);
-          setAddress(pubKey);
-          onConnect(pubKey, balance);
-          setConnecting(false);
-          return;
-        }
-      } catch (innerError) {
-        console.error('Fallback Error:', innerError);
-      }
-      alert('Could not connect to Freighter. Please check if the extension is open and on Testnet.');
+      console.error('Final Connection Error:', error);
+      alert(`Connection Failed: ${error.message || 'Unknown error'}. Please make sure Freighter is unlocked.`);
     } finally {
       setConnecting(false);
     }
@@ -79,7 +72,7 @@ export default function WalletConnect({ onConnect }) {
           className="connect-btn"
           disabled={connecting}
         >
-          {connecting ? 'Authorizing...' : 'Connect Wallet'}
+          {connecting ? 'Checking Wallet...' : 'Connect Wallet'}
         </button>
       )}
     </div>
