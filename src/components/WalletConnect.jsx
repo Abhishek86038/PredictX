@@ -23,11 +23,17 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // Direct use of window.freighterApi to bypass all bundling issues
-      const freighter = window.freighterApi;
+      // Small delay to ensure extension injection
+      let freighter = window.freighterApi;
       
       if (!freighter) {
-        throw new Error('Freighter Wallet not detected. Please install the extension.');
+        // Wait 500ms and try once more
+        await new Promise(r => setTimeout(r, 500));
+        freighter = window.freighterApi;
+      }
+      
+      if (!freighter) {
+        throw new Error('Freighter Wallet not detected. If installed, please refresh or check if it is disabled by your browser settings (especially in Brave).');
       }
 
       console.log('Requesting permission...');
@@ -46,7 +52,7 @@ export default function WalletConnect({ onConnect }) {
       }
     } catch (error) {
       console.error('Real Connection Error:', error);
-      alert(`NEW BUILD ERROR: ${error.message}`);
+      alert(`STARK ERROR: ${error.message}`);
     } finally {
       setConnecting(false);
     }
@@ -72,7 +78,7 @@ export default function WalletConnect({ onConnect }) {
           className="connect-btn"
           disabled={connecting}
         >
-          {connecting ? 'Connecting...' : 'Connect Wallet'}
+          {connecting ? 'Scanning...' : 'Connect Wallet'}
         </button>
       )}
     </div>
