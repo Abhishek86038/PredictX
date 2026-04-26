@@ -18,7 +18,8 @@
     "react-router-dom": "^7.14.2",
     "recharts": "^3.8.1",
     "soroban-client": "^1.0.1",
-    "stellar-sdk": "^13.3.0"
+    "stellar-sdk": "^13.3.0",
+    "vite-plugin-node-polyfills": "^0.26.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
