@@ -33,7 +33,7 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
 
   useEffect(() => {
     fetchPrice();
-    const interval = setInterval(fetchPrice, 10000); // Update every 10 seconds
+    const interval = setInterval(fetchPrice, 60000); // Updated to 60 seconds to avoid API rate limits
     return () => clearInterval(interval);
   }, [fetchPrice]);
 
