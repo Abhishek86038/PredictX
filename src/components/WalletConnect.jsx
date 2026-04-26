@@ -1,17 +1,9 @@
 import { useState } from 'react';
-import * as FreighterModule from '@stellar/freighter-api';
 import * as StellarSdk from 'stellar-sdk';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
   const [connecting, setConnecting] = useState(false);
-
-  // Fail-safe helper to get Freighter functions
-  const getFreighter = () => {
-    if (window.freighterApi) return window.freighterApi;
-    // Handle cases where it might be inside the module differently
-    return FreighterModule.default || FreighterModule;
-  };
 
   const fetchBalance = async (pubKey) => {
     try {
@@ -31,29 +23,30 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      const freighter = getFreighter();
-      console.log('Using Freighter Instance:', freighter);
-
-      if (!freighter || (!freighter.setAllowed && !freighter.getPublicKey)) {
-        throw new Error('Freighter API not found. Please refresh or check extension.');
+      // Direct use of window.freighterApi to bypass all bundling issues
+      const freighter = window.freighterApi;
+      
+      if (!freighter) {
+        throw new Error('Freighter Wallet not detected. Please install the extension.');
       }
 
-      // Try setAllowed if available, otherwise skip to getPublicKey
+      console.log('Requesting permission...');
       if (freighter.setAllowed) {
         await freighter.setAllowed();
       }
       
       const pubKey = await freighter.getPublicKey();
+      
       if (pubKey) {
         const balance = await fetchBalance(pubKey);
         setAddress(pubKey);
         onConnect(pubKey, balance);
       } else {
-        throw new Error('Could not retrieve Public Key');
+        throw new Error('User denied the request or Freighter is locked.');
       }
     } catch (error) {
-      console.error('Connection Error:', error);
-      alert(`Connection Failed: ${error.message}. Please try again.`);
+      console.error('Real Connection Error:', error);
+      alert(`NEW BUILD ERROR: ${error.message}`);
     } finally {
       setConnecting(false);
     }
@@ -79,7 +72,7 @@ export default function WalletConnect({ onConnect }) {
           className="connect-btn"
           disabled={connecting}
         >
-          {connecting ? 'Detecting Freighter...' : 'Connect Wallet'}
+          {connecting ? 'Connecting...' : 'Connect Wallet'}
         </button>
       )}
     </div>
