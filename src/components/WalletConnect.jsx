@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import * as StellarSdk from 'stellar-sdk';
+import { isConnected, getPublicKey, setAllowed } from '@stellar/freighter-api';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
@@ -23,36 +24,31 @@ export default function WalletConnect({ onConnect }) {
     setConnecting(true);
     
     try {
-      // Small delay to ensure extension injection
-      let freighter = window.freighterApi;
+      console.log('Scanning for Freighter...');
       
-      if (!freighter) {
-        // Wait 500ms and try once more
-        await new Promise(r => setTimeout(r, 500));
-        freighter = window.freighterApi;
-      }
-      
-      if (!freighter) {
-        throw new Error('Freighter Wallet not detected. If installed, please refresh or check if it is disabled by your browser settings (especially in Brave).');
+      // Try official isConnected check first
+      const connected = await isConnected();
+      let pubKey = null;
+
+      if (connected) {
+        await setAllowed();
+        pubKey = await getPublicKey();
+      } else if (window.freighterApi) {
+        // Fallback to direct global access
+        if (window.freighterApi.setAllowed) await window.freighterApi.setAllowed();
+        pubKey = await window.freighterApi.getPublicKey();
       }
 
-      console.log('Requesting permission...');
-      if (freighter.setAllowed) {
-        await freighter.setAllowed();
-      }
-      
-      const pubKey = await freighter.getPublicKey();
-      
       if (pubKey) {
         const balance = await fetchBalance(pubKey);
         setAddress(pubKey);
         onConnect(pubKey, balance);
       } else {
-        throw new Error('User denied the request or Freighter is locked.');
+        throw new Error('Freighter not responding. Is it unlocked and on Testnet?');
       }
     } catch (error) {
-      console.error('Real Connection Error:', error);
-      alert(`STARK ERROR: ${error.message}`);
+      console.error('Final Scan Error:', error);
+      alert(`FINAL ATTEMPT ERROR: ${error.message}`);
     } finally {
       setConnecting(false);
     }
