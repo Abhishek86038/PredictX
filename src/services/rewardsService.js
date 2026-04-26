@@ -1,4 +1,4 @@
-export const getUserStats = async (walletAddress) => {
+export const getUserStats = async (_walletAddress) => {
   // Mock user stats
   return {
     wins: 15,
@@ -14,10 +14,10 @@ export const getUserStats = async (walletAddress) => {
   };
 };
 
-export const getReferralEarnings = async (walletAddress) => {
+export const getReferralEarnings = async (_walletAddress) => {
   return 125;
 };
 
-export const claimReferralBonus = async (walletAddress) => {
+export const claimReferralBonus = async (_walletAddress) => {
   return { success: true, amount: 125 };
 };

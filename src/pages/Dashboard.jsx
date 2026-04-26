@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getUserStats, getReferralEarnings } from '../services/rewardsService';
 import StatCard from '../components/StatCard';
 import ReferralWidget from '../components/ReferralWidget';
@@ -9,15 +9,7 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
   const [referralEarnings, setReferralEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (walletAddress) {
-      fetchStats();
-      const interval = setInterval(fetchStats, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [walletAddress]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const userStats = await getUserStats(walletAddress);
       setStats(userStats);
@@ -29,7 +21,15 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [walletAddress]);
+
+  useEffect(() => {
+    if (walletAddress) {
+      fetchStats();
+      const interval = setInterval(fetchStats, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [walletAddress, fetchStats]);
 
   if (loading) return <LoadingSpinner size="lg" />;
 

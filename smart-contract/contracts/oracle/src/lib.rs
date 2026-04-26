@@ -1,7 +1,7 @@
 // Price Oracle - Fetch and validate real crypto prices
 
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Env, Address, Symbol, String, i128, Vec};
+use soroban_sdk::{contract, contractimpl, Env, Address, Symbol, String, Vec};
 
 #[contract]
 pub struct PriceOracleContract;
@@ -19,7 +19,7 @@ impl PriceOracleContract {
         let storage = env.storage().persistent();
         
         // Verify admin
-        let admin: Address = storage.get(&Symbol::new(&env, "admin")).unwrap().unwrap();
+        let admin: Address = storage.get::<_, Address>(&Symbol::new(&env, "admin")).unwrap();
         // Use env.invoker() or require_auth()
         admin.require_auth();
 
@@ -46,12 +46,12 @@ impl PriceOracleContract {
     // Get current price for crypto
     pub fn get_price(env: Env, _crypto_symbol: String) -> i128 {
         let storage = env.storage().persistent();
-        storage.get(&Symbol::new(&env, "latest_price")).unwrap_or(Ok(0i128)).unwrap_or(0)
+        storage.get::<_, i128>(&Symbol::new(&env, "latest_price")).unwrap_or(0)
     }
 
     // Get historical price - simplified for MVP
     pub fn get_historical_price(env: Env, _crypto_symbol: String, _timestamp: u64) -> i128 {
         let storage = env.storage().persistent();
-        storage.get(&Symbol::new(&env, "latest_price")).unwrap_or(Ok(0i128)).unwrap_or(0)
+        storage.get::<_, i128>(&Symbol::new(&env, "latest_price")).unwrap_or(0)
     }
 }

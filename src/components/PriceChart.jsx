@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getPriceHistory } from '../services/priceService';
 
@@ -6,11 +6,7 @@ export default function PriceChart({ cryptoId }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchChart();
-  }, [cryptoId]);
-
-  const fetchChart = async () => {
+  const fetchChart = useCallback(async () => {
     try {
       setLoading(true);
       const prices = await getPriceHistory(cryptoId, 7);
@@ -24,7 +20,11 @@ export default function PriceChart({ cryptoId }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cryptoId]);
+
+  useEffect(() => {
+    fetchChart();
+  }, [fetchChart]);
 
   if (loading) return <div className="chart-loading">Loading chart...</div>;
 

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { createPrediction, placePrediction } from '../services/predictionService';
+import { useState, useEffect, useCallback } from 'react';
+import { createPrediction } from '../services/predictionService';
 import { getPriceData } from '../services/priceService';
-import LoadingSpinner from '../components/LoadingSpinner';
 import ToastNotification from '../components/ToastNotification';
 import PriceChart from '../components/PriceChart';
 
@@ -22,13 +21,7 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
     { label: '24 hours', value: 1440 },
   ];
 
-  useEffect(() => {
-    fetchPrice();
-    const interval = setInterval(fetchPrice, 10000); // Update every 10 seconds
-    return () => clearInterval(interval);
-  }, [selectedCrypto]);
-
-  const fetchPrice = async () => {
+  const fetchPrice = useCallback(async () => {
     try {
       const data = await getPriceData(selectedCrypto);
       setCurrentPrice(data.usd);
@@ -36,7 +29,13 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
     } catch (error) {
       console.error('Error fetching price:', error);
     }
-  };
+  }, [selectedCrypto]);
+
+  useEffect(() => {
+    fetchPrice();
+    const interval = setInterval(fetchPrice, 10000); // Update every 10 seconds
+    return () => clearInterval(interval);
+  }, [fetchPrice]);
 
   const handleCreatePrediction = async (direction) => {
     if (!stakeAmount || stakeAmount <= 0) {

@@ -1,7 +1,7 @@
 // Prediction Staking - Accept bets, manage stakes, settle winners
 
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Env, Address, Symbol, String, i128};
+use soroban_sdk::{contract, contractimpl, Env, Address, Symbol, String};
 
 #[contract]
 pub struct PredictionStakingContract;
@@ -24,9 +24,7 @@ impl PredictionStakingContract {
     ) -> u32 {
         let storage = env.storage().persistent();
         
-        let count: u32 = storage.get(&Symbol::new(&env, "count"))
-            .unwrap_or(Ok(0u32))
-            .unwrap_or(0);
+        let count: u32 = storage.get::<_, u32>(&Symbol::new(&env, "count")).unwrap_or(0);
         
         let pred_id = count + 1;
         storage.set(&Symbol::new(&env, "count"), &pred_id);
@@ -58,7 +56,7 @@ impl PredictionStakingContract {
         // For MVP, we'll just track the stake
         
         let storage = env.storage().persistent();
-        let current: i128 = storage.get(&Symbol::new(&env, "total_staked")).unwrap_or(Ok(0i128)).unwrap_or(0);
+        let current: i128 = storage.get::<_, i128>(&Symbol::new(&env, "total_staked")).unwrap_or(0);
         storage.set(&Symbol::new(&env, "total_staked"), &(current + amount));
 
         true

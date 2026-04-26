@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getLeaderboard } from '../services/leaderboardService';
 
 export default function Leaderboard({ walletAddress }) {
@@ -7,13 +7,7 @@ export default function Leaderboard({ walletAddress }) {
   const [timeRange, setTimeRange] = useState('daily'); // daily, weekly, all-time
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchLeaderboard();
-    const interval = setInterval(fetchLeaderboard, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, [timeRange]);
-
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getLeaderboard(timeRange);
@@ -32,7 +26,13 @@ export default function Leaderboard({ walletAddress }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange, walletAddress]);
+
+  useEffect(() => {
+    fetchLeaderboard();
+    const interval = setInterval(fetchLeaderboard, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, [fetchLeaderboard]);
 
   const formatAddress = (address) => {
     return address.includes('...') ? address : `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;

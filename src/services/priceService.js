@@ -17,7 +17,7 @@ export const getPriceData = async (cryptoId) => {
     const data = await response.json();
     return data[cryptoId];
   } catch (error) {
-    throw new Error(`Failed to fetch price for ${cryptoId}: ${error.message}`);
+    throw new Error(`Failed to fetch price for ${cryptoId}: ${error.message}`, { cause: error });
   }
 };
 
@@ -30,7 +30,7 @@ export const getAllPrices = async () => {
     const data = await response.json();
     return data;
   } catch (error) {
-    throw new Error(`Failed to fetch all prices: ${error.message}`);
+    throw new Error(`Failed to fetch all prices: ${error.message}`, { cause: error });
   }
 };
 
@@ -42,7 +42,7 @@ export const getPriceHistory = async (cryptoId, days = 7) => {
     const data = await response.json();
     return data.prices; // Array of [timestamp, price]
   } catch (error) {
-    throw new Error(`Failed to fetch price history: ${error.message}`);
+    throw new Error(`Failed to fetch price history: ${error.message}`, { cause: error });
   }
 };
 

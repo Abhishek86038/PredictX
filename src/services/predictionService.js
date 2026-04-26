@@ -1,9 +1,11 @@
 // Prediction Service - Handles interaction with prediction contract/backend
 
 // In a real app, this would point to your backend API or directly to the Stellar network
-const API_URL = import.meta.env.VITE_PREDICTION_API_URL || '';
+// const API_URL = import.meta.env.VITE_PREDICTION_API_URL || '';
 
 export const createPrediction = async (walletAddress, crypto, timeframe, startPrice, direction, amount) => {
+  // Use API_URL if needed for real implementation
+  // console.log(API_URL);
   // For production, this would be a contract call or an API request
   console.log('Creating prediction:', { walletAddress, crypto, timeframe, startPrice, direction, amount });
   
@@ -27,7 +29,7 @@ export const placePrediction = async (walletAddress, predictionId, direction, am
   });
 };
 
-export const getUserPredictions = async (walletAddress, filter = 'active') => {
+export const getUserPredictions = async (_walletAddress, filter = 'active') => {
   // Mock data for user predictions
   return [
     {
@@ -44,7 +46,7 @@ export const getUserPredictions = async (walletAddress, filter = 'active') => {
   ];
 };
 
-export const settlePrediction = async (predictionId, endPrice, winner) => {
-  console.log('Settling prediction:', { predictionId, endPrice, winner });
+export const settlePrediction = async (_predictionId, _endPrice, _winner) => {
+  console.log('Settling prediction:', { _predictionId, _endPrice, _winner });
   return { success: true };
 };

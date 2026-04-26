@@ -1,4 +1,4 @@
-export const getLeaderboard = async (timeRange = 'daily') => {
+export const getLeaderboard = async (_timeRange = 'daily') => {
   // Mock leaderboard data
   return {
     rankings: [
@@ -11,6 +11,6 @@ export const getLeaderboard = async (timeRange = 'daily') => {
   };
 };
 
-export const getUserRank = async (walletAddress, timeRange = 'daily') => {
+export const getUserRank = async (_walletAddress, _timeRange = 'daily') => {
   return { rank: 12, profit: 150, winRate: 58 };
 };

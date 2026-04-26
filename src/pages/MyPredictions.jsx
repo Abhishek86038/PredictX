@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getUserPredictions } from '../services/predictionService';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -7,13 +7,7 @@ export default function MyPredictions({ walletAddress }) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('active'); // active, settled
 
-  useEffect(() => {
-    if (walletAddress) {
-      fetchPredictions();
-    }
-  }, [walletAddress, filter]);
-
-  const fetchPredictions = async () => {
+  const fetchPredictions = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getUserPredictions(walletAddress, filter);
@@ -23,7 +17,13 @@ export default function MyPredictions({ walletAddress }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [walletAddress, filter]);
+
+  useEffect(() => {
+    if (walletAddress) {
+      fetchPredictions();
+    }
+  }, [walletAddress, fetchPredictions]);
 
   return (
     <div className="my-predictions-container">
