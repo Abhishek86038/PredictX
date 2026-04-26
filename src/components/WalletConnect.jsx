@@ -19,26 +19,41 @@ export default function WalletConnect({ onConnect }) {
   };
 
   const connectWallet = async () => {
-    console.log('Connect Wallet initiated...');
     if (connecting) return;
-    
     setConnecting(true);
+    
     try {
-      // Direct call to getPublicKey - this should trigger the Freighter popup
-      const pubKey = await Freighter.getPublicKey();
+      // 1. Request Permission first (Crucial for modern Freighter)
+      console.log('Requesting permission from Freighter...');
+      const isAllowed = await Freighter.setAllowed();
       
-      if (pubKey) {
-        console.log('Public Key received:', pubKey);
-        const balance = await fetchBalance(pubKey);
-        setAddress(pubKey);
-        onConnect(pubKey, balance);
+      if (isAllowed) {
+        // 2. Once allowed, get the public key
+        const pubKey = await Freighter.getPublicKey();
+        if (pubKey) {
+          const balance = await fetchBalance(pubKey);
+          setAddress(pubKey);
+          onConnect(pubKey, balance);
+        }
       } else {
-        console.warn('No public key returned from Freighter');
-        alert('Could not get wallet address. Please ensure Freighter is unlocked and on Testnet.');
+        alert('Permission denied. Please allow this site in your Freighter settings.');
       }
     } catch (error) {
-      console.error('Detailed Connection Error:', error);
-      alert('Freighter connection failed. Do you have the extension installed?');
+      console.error('Connection Error:', error);
+      // Fallback for some versions of Freighter
+      try {
+        const pubKey = await Freighter.getPublicKey();
+        if (pubKey) {
+          const balance = await fetchBalance(pubKey);
+          setAddress(pubKey);
+          onConnect(pubKey, balance);
+          setConnecting(false);
+          return;
+        }
+      } catch (innerError) {
+        console.error('Fallback Error:', innerError);
+      }
+      alert('Could not connect to Freighter. Please check if the extension is open and on Testnet.');
     } finally {
       setConnecting(false);
     }
@@ -63,9 +78,8 @@ export default function WalletConnect({ onConnect }) {
           onClick={connectWallet} 
           className="connect-btn"
           disabled={connecting}
-          style={{ cursor: connecting ? 'not-allowed' : 'pointer' }}
         >
-          {connecting ? 'Waiting for Freighter...' : 'Connect Wallet'}
+          {connecting ? 'Authorizing...' : 'Connect Wallet'}
         </button>
       )}
     </div>
