@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getPublicKey, isConnected } from '@stellar/freighter-api';
+import * as Freighter from '@stellar/freighter-api';
 import * as StellarSdk from 'stellar-sdk';
 
 export default function WalletConnect({ onConnect }) {
@@ -19,21 +19,26 @@ export default function WalletConnect({ onConnect }) {
   };
 
   const connectWallet = async () => {
+    console.log('Connect Wallet initiated...');
+    if (connecting) return;
+    
     setConnecting(true);
     try {
-      const connected = await isConnected();
-      if (connected) {
-        const pubKey = await getPublicKey();
-        if (pubKey) {
-          const balance = await fetchBalance(pubKey);
-          setAddress(pubKey);
-          onConnect(pubKey, balance);
-        }
+      // Direct call to getPublicKey - this should trigger the Freighter popup
+      const pubKey = await Freighter.getPublicKey();
+      
+      if (pubKey) {
+        console.log('Public Key received:', pubKey);
+        const balance = await fetchBalance(pubKey);
+        setAddress(pubKey);
+        onConnect(pubKey, balance);
       } else {
-        alert('Please install Freighter Wallet extension');
+        console.warn('No public key returned from Freighter');
+        alert('Could not get wallet address. Please ensure Freighter is unlocked and on Testnet.');
       }
     } catch (error) {
-      console.error('Connection error:', error);
+      console.error('Detailed Connection Error:', error);
+      alert('Freighter connection failed. Do you have the extension installed?');
     } finally {
       setConnecting(false);
     }
@@ -58,8 +63,9 @@ export default function WalletConnect({ onConnect }) {
           onClick={connectWallet} 
           className="connect-btn"
           disabled={connecting}
+          style={{ cursor: connecting ? 'not-allowed' : 'pointer' }}
         >
-          {connecting ? 'Connecting...' : 'Connect Wallet'}
+          {connecting ? 'Waiting for Freighter...' : 'Connect Wallet'}
         </button>
       )}
     </div>
