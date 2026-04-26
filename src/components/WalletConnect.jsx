@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Horizon } from 'stellar-sdk';
-import { 
-  isConnected, 
-  getPublicKey, 
-} from '@stellar/freighter-api';
+import freighterApi from '@stellar/freighter-api';
+
+const { isConnected, getPublicKey } = freighterApi;
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
