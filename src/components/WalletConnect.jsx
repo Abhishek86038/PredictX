@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getPublicKey, isConnected } from '@stellar/freighter-api';
-import { Server } from 'stellar-sdk';
-
-const server = new Server('https://horizon-testnet.stellar.org');
+import * as StellarSdk from 'stellar-sdk';
 
 export default function WalletConnect({ onConnect }) {
   const [address, setAddress] = useState(null);
@@ -10,6 +8,7 @@ export default function WalletConnect({ onConnect }) {
 
   const fetchBalance = async (pubKey) => {
     try {
+      const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
       const account = await server.loadAccount(pubKey);
       const nativeBalance = account.balances.find(b => b.asset_type === 'native');
       return nativeBalance ? nativeBalance.balance : '0';
