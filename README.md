@@ -27,11 +27,11 @@
 
 | User Name | Email ID | Wallet Address | Feedback Implemented | Commit ID |
 |-----------|----------|----------------|----------------------|-----------|
-| Subhranil | subhranilbaul2017@gmail.com | GBTOPBOVCF5652TCZMN4YDMSBTM... | Improved XLM to XPOLL wallet balance handling logic | c1a9f2 |
-| Dikansha Bindal | bindaldikansha@gmail.com | GB66XSKCNNHE6GUYA7BENANHHUKC... | Enhanced UI interactivity and modern wallet popup experience | d4b7k8 |
-| Abhishek Gupta | abhishekgupta0834@gmail.com | GBEA2LH5VILCEKQC6M77GXGJ3CPJ... | Added loading skeletons and smooth micro animations | e8m3p1 |
-| Jayant Vaibhav | jayantvaibhavspj@gmail.com | GBQI6DPFRFZMTDO4KFUPB5D2F6WC... | Added better transaction visibility and wallet action improvements | f2q6r4 |
-| Shashank Rai | shashankrai283@gmail.com | GD5CCTX45O4DWDT3OQ6IYDH2SK55... | Complete premium clean UI redesign implementation | g7t9x5 |
+| Subhranil | subhranilbaul2017@gmail.com | GBTOPBOVCF5652TCZMN4YDMSBTM... | Improved XLM to XPOLL wallet balance handling logic | ffeb609 |
+| Dikansha Bindal | bindaldikansha@gmail.com | GB66XSKCNNHE6GUYA7BENANHHUKC... | Enhanced UI interactivity and modern wallet popup experience | 1e8d7b5 |
+| Abhishek Gupta | abhishekgupta0834@gmail.com | GBEA2LH5VILCEKQC6M77GXGJ3CPJ... | Added loading skeletons and smooth micro animations | 5362a53 |
+| Jayant Vaibhav | jayantvaibhavspj@gmail.com | GBQI6DPFRFZMTDO4KFUPB5D2F6WC... | Added better transaction visibility and wallet action improvements | da82efa |
+| Shashank Rai | shashankrai283@gmail.com | GD5CCTX45O4DWDT3OQ6IYDH2SK55... | Complete premium clean UI redesign implementation | df9d898 |
 
 ## 📸 App Preview
 <!-- Replace the URL below with your actual screenshot path -->
