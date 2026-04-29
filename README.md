@@ -33,9 +33,9 @@
 | Jayant Vaibhav | jayantvaibhavspj@gmail.com | GBQI6DPFRFZMTDO4KFUPB5D2F6WC... | Added better transaction visibility and wallet action improvements | da82efa |
 | Shashank Rai | shashankrai283@gmail.com | GD5CCTX45O4DWDT3OQ6IYDH2SK55... |The UI looks too simple right now, please make it more premium and modern. | df9d898 |
 
-## 📸 App Preview
-<!-- Replace the URL below with your actual screenshot path -->
-![XPOLL Predictor Preview](https://via.placeholder.com/800x450?text=PredictX+Dashboard+Preview)
+### Live Demo link  :-   https://predict-x-pied.vercel.app/leaderboard
+
+
 
 
 Real-time cryptocurrency price prediction platform with gamification, leaderboards, and token rewards on Stellar.
