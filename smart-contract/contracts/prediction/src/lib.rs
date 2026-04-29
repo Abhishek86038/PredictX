@@ -1,7 +1,19 @@
 // Prediction Staking - Accept bets, manage stakes, settle winners
 
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Env, Address, Symbol, String};
+use soroban_sdk::{contract, contractimpl, Env, Address, Symbol, String, contracttype};
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Prediction {
+    pub id: u32,
+    pub crypto: String,
+    pub timeframe: u32,
+    pub start_price: i128,
+    pub end_time: u64,
+    pub creator: Address,
+    pub settled: bool,
+}
 
 #[contract]
 pub struct PredictionStakingContract;
@@ -17,24 +29,31 @@ impl PredictionStakingContract {
     // Create new prediction
     pub fn create_prediction(
         env: Env,
-        _crypto_symbol: String,
+        crypto_symbol: String,
         timeframe_minutes: u32,
         start_price: i128,
         timestamp: u64,
+        creator: Address,
     ) -> u32 {
+        creator.require_auth();
         let storage = env.storage().persistent();
         
         let count: u32 = storage.get::<_, u32>(&Symbol::new(&env, "count")).unwrap_or(0);
-        
         let pred_id = count + 1;
+        
+        let prediction = Prediction {
+            id: pred_id,
+            crypto: crypto_symbol,
+            timeframe: timeframe_minutes,
+            start_price,
+            end_time: timestamp + (timeframe_minutes as u64 * 60),
+            creator,
+            settled: false,
+        };
+
+        storage.set(&pred_id, &prediction);
         storage.set(&Symbol::new(&env, "count"), &pred_id);
 
-        // Store prediction metadata (simplified)
-        // In a real app, we'd use a struct
-        storage.set(&Symbol::new(&env, "start_price"), &start_price);
-        storage.set(&Symbol::new(&env, "end_time"), &(timestamp + (timeframe_minutes as u64 * 60)));
-
-        // Emit event
         env.events().publish(
             (Symbol::new(&env, "prediction_created"),),
             (pred_id, start_price, timestamp),
@@ -46,18 +65,17 @@ impl PredictionStakingContract {
     // Place prediction (stake tokens)
     pub fn place_prediction(
         env: Env,
-        _prediction_id: u32,
-        _direction: String, // "up" or "down"
+        prediction_id: u32,
+        direction: String, // "up" or "down"
         amount: i128,
         user: Address,
     ) -> bool {
         user.require_auth();
-        // Here we would transfer tokens from user to contract
-        // For MVP, we'll just track the stake
-        
         let storage = env.storage().persistent();
-        let current: i128 = storage.get::<_, i128>(&Symbol::new(&env, "total_staked")).unwrap_or(0);
-        storage.set(&Symbol::new(&env, "total_staked"), &(current + amount));
+        
+        // Store stake info (simplified)
+        let stake_key = (Symbol::new(&env, "stake"), prediction_id, user.clone());
+        storage.set(&stake_key, &(direction, amount));
 
         true
     }
@@ -70,13 +88,27 @@ impl PredictionStakingContract {
         winner_direction: String,
     ) -> bool {
         let storage = env.storage().persistent();
-        storage.set(&Symbol::new(&env, "status"), &Symbol::new(&env, "settled"));
+        if let Some(mut prediction) = storage.get::<_, Prediction>(&prediction_id) {
+            prediction.settled = true;
+            storage.set(&prediction_id, &prediction);
 
-        env.events().publish(
-            (Symbol::new(&env, "prediction_settled"),),
-            (prediction_id, winner_direction, end_price),
-        );
+            env.events().publish(
+                (Symbol::new(&env, "prediction_settled"),),
+                (prediction_id, winner_direction, end_price),
+            );
+            return true;
+        }
+        false
+    }
+    // Get prediction by ID
+    pub fn get_prediction(env: Env, prediction_id: u32) -> Option<Prediction> {
+        let storage = env.storage().persistent();
+        storage.get::<_, Prediction>(&prediction_id)
+    }
 
-        true
+    // Get total count
+    pub fn get_count(env: Env) -> u32 {
+        let storage = env.storage().persistent();
+        storage.get::<_, u32>(&Symbol::new(&env, "count")).unwrap_or(0)
     }
 }

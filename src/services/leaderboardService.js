@@ -1,50 +1,40 @@
-// Leaderboard Service - Dynamic ranking based on real user performance
+import { getUserPredictions } from './predictionService';
 
-const PREDICTION_KEY = 'predictx_predictions';
+export const getLeaderboard = async (_timeRange = 'daily') => {
+  try {
+    // In a real app, we would use an indexer or a specialized contract
+    // For this MVP, we'll derive it from predictions
+    const allPredictions = await getUserPredictions(null); // Fetch all
+    
+    const userStats = {};
+    allPredictions.forEach(p => {
+      if (!userStats[p.creator]) {
+        userStats[p.creator] = { address: p.creator, profit: 0, winRate: 0, totalPredictions: 0, wins: 0 };
+      }
+      userStats[p.creator].totalPredictions++;
+      if (p.won) {
+        userStats[p.creator].wins++;
+        userStats[p.creator].profit += p.reward;
+      }
+    });
 
-export const getLeaderboard = async (walletAddress, _timeRange = 'daily') => {
-  // Real logic: We have a set of top competitors + the current user
-  const topCompetitors = [
-    { address: 'GB7V...X4PQ', profit: 2450, winRate: 78, totalPredictions: 120 },
-    { address: 'GDRS...92K1', profit: 1820, winRate: 65, totalPredictions: 85 },
-    { address: 'GCTA...L0P9', profit: 1440, winRate: 72, totalPredictions: 64 },
-    { address: 'GCXP...M4N2', profit: 980, winRate: 58, totalPredictions: 92 },
-  ];
+    const rankings = Object.values(userStats).map(u => ({
+      ...u,
+      winRate: Math.round((u.wins / u.totalPredictions) * 100) || 0
+    })).sort((a, b) => b.profit - a.profit);
 
-  // Calculate REAL user data
-  const allPredictions = JSON.parse(localStorage.getItem(PREDICTION_KEY) || '[]');
-  const userPredictions = allPredictions.filter(p => p.walletAddress === walletAddress);
-  const settled = userPredictions.filter(p => p.status === 'settled');
-  
-  const totalRewards = settled.reduce((sum, p) => sum + p.reward, 0);
-  const settledStakes = settled.reduce((sum, p) => sum + p.stake, 0);
-  const userProfit = totalRewards - settledStakes;
-  const userWinRate = settled.length > 0 ? Math.round((settled.filter(p => p.won).length / settled.length) * 100) : 0;
-
-  const userEntry = {
-    address: walletAddress || 'Not Connected',
-    profit: userProfit,
-    winRate: userWinRate,
-    totalPredictions: userPredictions.length,
-    isUser: true
-  };
-
-  // Combine and sort
-  const allRankings = [...topCompetitors, userEntry].sort((a, b) => b.profit - a.profit);
-
-  return {
-    rankings: allRankings
-  };
+    return { rankings };
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    return { rankings: [] };
+  }
 };
 
-export const getUserRank = async (walletAddress) => {
-  const data = await getLeaderboard(walletAddress);
-  const index = data.rankings.findIndex(r => r.isUser);
-  const user = data.rankings[index];
-  
-  return {
-    rank: index + 1,
-    profit: user.profit,
-    winRate: user.winRate
-  };
+export const getUserRank = async (walletAddress, _timeRange = 'daily') => {
+  const { rankings } = await getLeaderboard();
+  const index = rankings.findIndex(u => u.address === walletAddress);
+  if (index !== -1) {
+    return { rank: index + 1, ...rankings[index] };
+  }
+  return { rank: 'N/A', profit: 0, winRate: 0 };
 };

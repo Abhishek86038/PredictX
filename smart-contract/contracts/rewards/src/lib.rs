@@ -23,30 +23,38 @@ impl RewardsDistributionContract {
     ) -> bool {
         let storage = env.storage().persistent();
 
-        let wins_key = Symbol::new(&env, "wins");
-        let losses_key = Symbol::new(&env, "losses");
+        let wins_key = (Symbol::new(&env, "wins"), user.clone());
+        let losses_key = (Symbol::new(&env, "losses"), user.clone());
+        let profit_key = (Symbol::new(&env, "profit"), user.clone());
 
         if won {
             let wins: u32 = storage.get::<_, u32>(&wins_key).unwrap_or(0);
             storage.set(&wins_key, &(wins + 1));
+            
+            let profit: i128 = storage.get::<_, i128>(&profit_key).unwrap_or(0);
+            storage.set(&profit_key, &(profit + amount));
         } else {
             let losses: u32 = storage.get::<_, u32>(&losses_key).unwrap_or(0);
             storage.set(&losses_key, &(losses + 1));
+            
+            let profit: i128 = storage.get::<_, i128>(&profit_key).unwrap_or(0);
+            storage.set(&profit_key, &(profit - amount));
         }
 
         true
     }
 
     // Get user statistics
-    pub fn get_user_stats(env: Env, _user: Address) -> (u32, u32, i128, u32) {
+    pub fn get_user_stats(env: Env, user: Address) -> (u32, u32, i128, u32) {
         let storage = env.storage().persistent();
 
-        let wins: u32 = storage.get::<_, u32>(&Symbol::new(&env, "wins")).unwrap_or(0);
-        let losses: u32 = storage.get::<_, u32>(&Symbol::new(&env, "losses")).unwrap_or(0);
+        let wins: u32 = storage.get::<_, u32>(&(Symbol::new(&env, "wins"), user.clone())).unwrap_or(0);
+        let losses: u32 = storage.get::<_, u32>(&(Symbol::new(&env, "losses"), user.clone())).unwrap_or(0);
+        let profit: i128 = storage.get::<_, i128>(&(Symbol::new(&env, "profit"), user.clone())).unwrap_or(0);
         
         let total = wins + losses;
         let win_rate = if total > 0 { (wins * 100) / total } else { 0 };
 
-        (wins, losses, 0, win_rate)
+        (wins, losses, profit, win_rate)
     }
 }
