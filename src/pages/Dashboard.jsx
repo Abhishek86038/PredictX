@@ -3,7 +3,7 @@ import { getUserStats, getReferralEarnings } from '../services/rewardsService';
 import StatCard from '../components/StatCard';
 import ReferralWidget from '../components/ReferralWidget';
 import TokenBalanceWidget from '../components/TokenBalanceWidget';
-import LoadingSpinner from '../components/LoadingSpinner';
+import SkeletonLoader from '../components/SkeletonLoader';
 
 const timeAgo = (isoStr) => {
   if (!isoStr) return '';
@@ -41,13 +41,44 @@ export default function Dashboard({ walletAddress, xlmBalance, refreshBalance })
     }
   }, [walletAddress, fetchStats]);
 
-  if (loading) return <LoadingSpinner size="lg" />;
+  if (loading) return (
+    <div className="dashboard-container">
+      <header className="page-header">
+        <h2>Dashboard</h2>
+        <p className="page-subtitle">Your personal prediction performance and rewards</p>
+      </header>
+
+      <SkeletonLoader type="stat-grid" />
+
+      <div className="dashboard-content-grid" style={{ marginTop: '1.5rem' }}>
+        <div className="left-column">
+          <section className="stats-section card">
+            <SkeletonLoader type="text" lines={1} />
+            <div style={{ marginTop: '1.2rem' }}>
+              <SkeletonLoader type="list" rows={4} />
+            </div>
+          </section>
+          <section className="recent-section card" style={{ marginTop: '1.5rem' }}>
+            <SkeletonLoader type="text" lines={1} />
+            <div style={{ marginTop: '1.2rem' }}>
+              <SkeletonLoader type="list" rows={4} />
+            </div>
+          </section>
+        </div>
+        <div className="right-column">
+          <div className="card" style={{ height: '260px' }}>
+            <SkeletonLoader type="text" lines={6} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   const s = stats || { wins: 0, losses: 0, profit: 0, winRate: 0, totalStaked: 0, recentPredictions: [] };
   const roi = s.totalStaked > 0 ? ((s.profit / s.totalStaked) * 100).toFixed(2) : '0.00';
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container content-fade-in">
       <header className="page-header">
         <h2>Dashboard</h2>
         <p className="page-subtitle">Your personal prediction performance and rewards</p>
