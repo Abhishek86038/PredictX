@@ -30,6 +30,34 @@ Real-time cryptocurrency price prediction platform with gamification, leaderboar
 - [x] **CI/CD Pipeline**: GitHub Actions ready for automated testing and deployment.
 - [x] **Premium Aesthetics**: Modern UI with smooth transitions and data visualization.
 
+## ✨ Recent Enhancements
+
+### 🎨 Premium UI Redesign
+- Complete overhaul of the frontend design for a more professional and modern aesthetic.
+- Implemented a cohesive design system with glassmorphism, vibrant gradients, and smooth transitions.
+- Optimized layout for better visibility and user focus across all dashboard sections.
+
+### 🔌 Real Multi-Wallet Integration
+- Added support for multiple major Stellar wallets: **Freighter, Albedo, and Rabet**.
+- Improved connection flow with a dedicated, high-z-index modal portal.
+- Robust state management for active wallet sessions and connection persistence.
+
+### 💰 Intelligent Asset Handling
+- Enhanced XLM to XPOLL balance handling logic for seamless asset usability.
+- Real-time fetching of actual wallet balances directly from the Stellar Testnet.
+- Clearer visual distinction between native XLM (for fees) and platform tokens.
+
+### 🛠️ Connected Wallet Quick Actions
+- **Instant Copy**: Clean "Copy Address" button with animated success tooltips.
+- **On-Chain Verification**: Direct link to view accounts on the **Stellar Expert** explorer.
+- **Shortened Address Formatting**: Premium display of truncated wallet IDs for better legibility.
+
+### ⚡ Professional Loading Experience
+- **Skeleton Loaders**: Modern shimmer placeholders for cards and lists to prevent "blank" states.
+- **Premium Spinners**: Upgraded to high-fidelity animated ring spinners.
+- **Contextual Loading**: Integrated micro-animations for specific actions like staking or connecting.
+- **Smooth Content Reveal**: Soft fade-in transitions for data once it finishes loading.
+
 ## 🎮 Features
 
 ### Prediction Arena
