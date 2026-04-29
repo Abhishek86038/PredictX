@@ -7,16 +7,12 @@ export default function WalletConnect({ onConnect }) {
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    // Optionally check if already connected
     const checkExistingConnection = async () => {
       try {
-        const connected = await checkWalletConnection();
-        if (connected) {
-          // You could automatically connect here if desired, 
-          // but often it's better to let the user initiate.
-        }
+        await checkWalletConnection();
       } catch (err) {
         console.error("Error checking wallet:", err);
       }
@@ -31,7 +27,6 @@ export default function WalletConnect({ onConnect }) {
     try {
       const publicKey = await connectWallet(walletName);
       setAddress(publicKey);
-      
       const balance = await fetchXLMBalance(publicKey);
       onConnect(publicKey, parseFloat(balance));
     } catch (err) {
@@ -49,16 +44,62 @@ export default function WalletConnect({ onConnect }) {
 
   const formatAddress = (addr) => {
     if (!addr) return '';
-    return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+      const el = document.createElement('textarea');
+      el.value = address;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const openExplorer = () => {
+    window.open(`https://stellar.expert/explorer/testnet/account/${address}`, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <div className="wallet-connect">
       {error && <span className="wallet-error">{error}</span>}
       {address ? (
-        <div className="connected-wallet">
-          <span className="wallet-address" title={address}>{formatAddress(address)}</span>
-          <button onClick={disconnectWallet} className="disconnect-btn">Disconnect</button>
+        <div className="connected-wallet-bar">
+          <div className="wallet-status-dot" title="Connected" />
+          <span className="wallet-address-chip" title={address}>{formatAddress(address)}</span>
+          <div className="wallet-actions">
+            <button
+              className="wallet-action-btn"
+              onClick={copyAddress}
+              title="Copy address"
+              aria-label="Copy wallet address"
+            >
+              {copied ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              )}
+              {copied && <span className="copy-tooltip">Copied!</span>}
+            </button>
+            <button
+              className="wallet-action-btn"
+              onClick={openExplorer}
+              title="View on Stellar Expert"
+              aria-label="View on blockchain explorer"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </button>
+            <button onClick={disconnectWallet} className="disconnect-btn">Disconnect</button>
+          </div>
         </div>
       ) : (
         <>
