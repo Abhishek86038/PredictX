@@ -52,7 +52,7 @@ export default function Leaderboard({ walletAddress }) {
             <span className="rank-number">#{userRank.rank}</span>
             <div className="rank-info">
               <h3>Your Position</h3>
-              <p className="profit">+{userRank.profit} XPOLL</p>
+              <p className="profit">+{userRank.profit} XLM</p>
               <p className="winrate">Win Rate: {userRank.winRate}%</p>
             </div>
           </div>

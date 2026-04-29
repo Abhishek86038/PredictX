@@ -100,7 +100,7 @@ export default function MyPredictions({ walletAddress }) {
                 </div>
                 <div className="detail-row">
                   <span className="label">Stake</span>
-                  <span className="value">{pred.stake} XPOLL</span>
+                  <span className="value">{pred.stake} XLM</span>
                 </div>
                 <div className="detail-row">
                   <span className="label">Timeframe</span>
@@ -113,7 +113,7 @@ export default function MyPredictions({ walletAddress }) {
                   <div className={`result-box ${pred.won ? 'won' : 'lost'}`}>
                     <div className="result-label">{pred.won ? 'WINNER' : 'LOST'}</div>
                     <div className="result-amount">
-                      {pred.won ? `+${pred.reward}` : `-${pred.stake}`} XPOLL
+                      {pred.won ? `+${pred.reward}` : `-${pred.stake}`} XLM
                     </div>
                   </div>
                 ) : (

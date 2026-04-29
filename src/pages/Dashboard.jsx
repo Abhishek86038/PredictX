@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { getUserStats, getReferralEarnings } from '../services/rewardsService';
 import StatCard from '../components/StatCard';
 import ReferralWidget from '../components/ReferralWidget';
+import TokenBalanceWidget from '../components/TokenBalanceWidget';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-// Pure utility — defined at module level to avoid React purity rule
 const timeAgo = (isoStr) => {
   if (!isoStr) return '';
   const now = new Date();
@@ -15,8 +15,7 @@ const timeAgo = (isoStr) => {
   return `${Math.floor(diff / 86400)}d ago`;
 };
 
-
-export default function Dashboard({ walletAddress, tokenBalance }) {
+export default function Dashboard({ walletAddress, xlmBalance, refreshBalance }) {
   const [stats, setStats] = useState(null);
   const [referralEarnings, setReferralEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -44,13 +43,8 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
 
   if (loading) return <LoadingSpinner size="lg" />;
 
-  // Guard: stats may be null if fetch failed
   const s = stats || { wins: 0, losses: 0, profit: 0, winRate: 0, totalStaked: 0, recentPredictions: [] };
-
-  const roi = s.totalStaked > 0
-    ? ((s.profit / s.totalStaked) * 100).toFixed(2)
-    : '0.00';
-
+  const roi = s.totalStaked > 0 ? ((s.profit / s.totalStaked) * 100).toFixed(2) : '0.00';
 
   return (
     <div className="dashboard-container">
@@ -59,33 +53,13 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
         <p className="page-subtitle">Your personal prediction performance and rewards</p>
       </header>
 
+      <TokenBalanceWidget walletAddress={walletAddress} xlmBalance={xlmBalance} onBalanceRefresh={refreshBalance} />
+
       <div className="stats-grid">
-        <StatCard
-          title="XLM Balance"
-          value={parseFloat(tokenBalance || 0).toFixed(4)}
-          subtitle="XLM"
-          icon="💰"
-          color="#4CAF50"
-        />
-        <StatCard
-          title="Net Profit"
-          value={s.profit.toFixed(4)}
-          subtitle="XLM"
-          icon={s.profit >= 0 ? '📈' : '📉'}
-          color={s.profit >= 0 ? '#4CAF50' : '#F44336'}
-        />
-        <StatCard
-          title="Win Rate"
-          value={`${s.winRate}%`}
-          icon="🎯"
-          color="#0066CC"
-        />
-        <StatCard
-          title="Estimated ROI"
-          value={`${roi}%`}
-          icon="💹"
-          color="#FF9800"
-        />
+        <StatCard title="Wallet Balance" value={parseFloat(xlmBalance || 0).toFixed(4)} subtitle="XLM (Stellar Lumens)" icon="⭐" color="#4CAF50" />
+        <StatCard title="Net Profit" value={s.profit.toFixed(4)} subtitle="XLM" icon={s.profit >= 0 ? '📈' : '📉'} color={s.profit >= 0 ? '#4CAF50' : '#F44336'} />
+        <StatCard title="Win Rate" value={`${s.winRate}%`} icon="🎯" color="#0066CC" />
+        <StatCard title="Estimated ROI" value={`${roi}%`} icon="💹" color="#FF9800" />
       </div>
 
       <div className="dashboard-content-grid">
@@ -93,25 +67,12 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
           <section className="stats-section card">
             <h3>Prediction History</h3>
             <div className="stats-breakdown">
-              <div className="breakdown-item">
-                <span className="label">Total Predictions</span>
-                <span className="value">{s.wins + s.losses}</span>
-              </div>
-              <div className="breakdown-item">
-                <span className="label text-success">Wins</span>
-                <span className="value text-success">{s.wins}</span>
-              </div>
-              <div className="breakdown-item">
-                <span className="label text-danger">Losses</span>
-                <span className="value text-danger">{s.losses}</span>
-              </div>
-              <div className="breakdown-item">
-                <span className="label">Total Staked</span>
-                <span className="value">{s.totalStaked.toFixed(4)} XLM</span>
-              </div>
+              <div className="breakdown-item"><span className="label">Total Predictions</span><span className="value">{s.wins + s.losses}</span></div>
+              <div className="breakdown-item"><span className="label text-success">Wins</span><span className="value text-success">{s.wins}</span></div>
+              <div className="breakdown-item"><span className="label text-danger">Losses</span><span className="value text-danger">{s.losses}</span></div>
+              <div className="breakdown-item"><span className="label">Total Staked</span><span className="value">{s.totalStaked.toFixed(4)} XLM</span></div>
             </div>
           </section>
-
           <section className="recent-section card">
             <h3>Recent Activity</h3>
             {s.recentPredictions && s.recentPredictions.length > 0 ? (
@@ -133,12 +94,8 @@ export default function Dashboard({ walletAddress, tokenBalance }) {
             )}
           </section>
         </div>
-
         <div className="right-column">
-          <ReferralWidget
-            walletAddress={walletAddress}
-            referralEarnings={referralEarnings}
-          />
+          <ReferralWidget walletAddress={walletAddress} referralEarnings={referralEarnings} />
         </div>
       </div>
     </div>

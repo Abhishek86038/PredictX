@@ -20,7 +20,7 @@ export default function ReferralWidget({ walletAddress, referralEarnings }) {
 
       <div className="referral-info">
         <p className="referral-desc">Earn 10% of your friends' predictions forever!</p>
-        <p className="referral-earnings">Referral Earnings: <strong>{referralEarnings} XPOLL</strong></p>
+        <p className="referral-earnings">Referral Earnings: <strong>{referralEarnings} XLM</strong></p>
       </div>
 
       <div className="referral-link-container">

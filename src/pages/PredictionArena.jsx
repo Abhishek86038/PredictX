@@ -3,8 +3,12 @@ import { createPrediction } from '../services/predictionService';
 import { getPriceData } from '../services/priceService';
 import ToastNotification from '../components/ToastNotification';
 import PriceChart from '../components/PriceChart';
+import TokenBalanceWidget from '../components/TokenBalanceWidget';
 
-export default function PredictionArena({ walletAddress, tokenBalance, refreshBalance }) {
+const MIN_STAKE = 1;       // Minimum stake in XLM
+const XLM_RESERVE = 1;     // Reserve XLM for transaction fees
+
+export default function PredictionArena({ walletAddress, xlmBalance, refreshBalance }) {
   const [selectedCrypto, setSelectedCrypto] = useState('bitcoin');
   const [selectedTimeframe, setSelectedTimeframe] = useState(60);
   const [stakeAmount, setStakeAmount] = useState('');
@@ -13,6 +17,8 @@ export default function PredictionArena({ walletAddress, tokenBalance, refreshBa
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
   const [priceChange24h, setPriceChange24h] = useState(0);
+
+  const usableBalance = Math.max(0, xlmBalance - XLM_RESERVE);
 
   const timeframes = [
     { label: '1 hour', value: 60 },
@@ -38,13 +44,23 @@ export default function PredictionArena({ walletAddress, tokenBalance, refreshBa
   }, [fetchPrice]);
 
   const handleCreatePrediction = async (direction) => {
-    if (!stakeAmount || stakeAmount <= 0) {
-      setNotification({ type: 'error', message: 'Enter valid stake amount' });
+    const amount = parseFloat(stakeAmount);
+
+    if (!stakeAmount || amount <= 0) {
+      setNotification({ type: 'error', message: 'Enter a valid stake amount' });
       return;
     }
 
-    if (stakeAmount > tokenBalance) {
-      setNotification({ type: 'error', message: 'Insufficient balance' });
+    if (amount < MIN_STAKE) {
+      setNotification({ type: 'error', message: `Minimum stake is ${MIN_STAKE} XLM` });
+      return;
+    }
+
+    if (amount > usableBalance) {
+      setNotification({
+        type: 'error',
+        message: `Insufficient balance. You have ${usableBalance.toFixed(4)} XLM available (${XLM_RESERVE} XLM reserved for fees)`
+      });
       return;
     }
 
@@ -56,7 +72,7 @@ export default function PredictionArena({ walletAddress, tokenBalance, refreshBa
         selectedTimeframe,
         currentPrice,
         direction,
-        parseFloat(stakeAmount)
+        amount
       );
 
       setPrediction({
@@ -65,13 +81,13 @@ export default function PredictionArena({ walletAddress, tokenBalance, refreshBa
         timeframe: selectedTimeframe,
         startPrice: currentPrice,
         direction: direction,
-        stake: parseFloat(stakeAmount),
+        stake: amount,
         createdAt: new Date(),
       });
 
       setNotification({
         type: 'success',
-        message: `Prediction created! Staked ${stakeAmount} XLM on ${direction.toUpperCase()}`
+        message: `Prediction created! Staked ${amount} XLM on ${direction.toUpperCase()}`
       });
 
       setStakeAmount('');
@@ -88,12 +104,25 @@ export default function PredictionArena({ walletAddress, tokenBalance, refreshBa
     }
   };
 
+  // Quick-fill percentage buttons
+  const handleQuickFill = (percentage) => {
+    const amount = (usableBalance * percentage / 100).toFixed(4);
+    setStakeAmount(amount);
+  };
+
   return (
     <div className="prediction-arena-container">
       <header className="page-header">
         <h2>Prediction Arena</h2>
-        <p className="page-subtitle">Predict the market trend and earn XPOLL rewards</p>
+        <p className="page-subtitle">Predict the market trend — stake XLM, earn rewards</p>
       </header>
+
+      {/* Token Balance Widget */}
+      <TokenBalanceWidget
+        walletAddress={walletAddress}
+        xlmBalance={xlmBalance}
+        onBalanceRefresh={refreshBalance}
+      />
 
       {/* Price Display */}
       <div className="price-display">
@@ -133,17 +162,53 @@ export default function PredictionArena({ walletAddress, tokenBalance, refreshBa
             ))}
           </div>
 
-          <label>Stake Amount (XPOLL)</label>
+          <label>Stake Amount (XLM)</label>
           <div className="stake-input-container">
             <input
               type="number"
               value={stakeAmount}
               onChange={(e) => setStakeAmount(e.target.value)}
-              placeholder="Min stake 10 XPOLL"
-              min="1"
+              placeholder={`Min ${MIN_STAKE} XLM`}
+              min={MIN_STAKE}
+              max={usableBalance}
+              step="0.01"
             />
-            <span className="balance-text">Balance: {tokenBalance} XPOLL</span>
+            <span className="balance-text">
+              Available: <strong>{usableBalance.toFixed(4)} XLM</strong>
+            </span>
           </div>
+
+          {/* Quick-fill buttons */}
+          <div className="quick-fill-buttons">
+            {[10, 25, 50, 100].map(pct => (
+              <button
+                key={pct}
+                className="quick-fill-btn"
+                onClick={() => handleQuickFill(pct)}
+                disabled={usableBalance <= 0}
+              >
+                {pct}%
+              </button>
+            ))}
+          </div>
+
+          {/* Stake summary */}
+          {stakeAmount && parseFloat(stakeAmount) > 0 && (
+            <div className="stake-summary">
+              <div className="stake-summary-row">
+                <span>Staking</span>
+                <span><strong>{parseFloat(stakeAmount).toFixed(4)} XLM</strong></span>
+              </div>
+              <div className="stake-summary-row">
+                <span>Potential Win (1.8×)</span>
+                <span className="text-success"><strong>{(parseFloat(stakeAmount) * 1.8).toFixed(4)} XLM</strong></span>
+              </div>
+              <div className="stake-summary-row muted">
+                <span>Remaining after stake</span>
+                <span>{(usableBalance - parseFloat(stakeAmount)).toFixed(4)} XLM</span>
+              </div>
+            </div>
+          )}
 
           <div className="prediction-buttons">
             <button
@@ -182,6 +247,10 @@ export default function PredictionArena({ walletAddress, tokenBalance, refreshBa
                   <span className="value">${prediction.startPrice.toFixed(2)}</span>
                 </div>
                 <div className="status-item">
+                  <span className="label">Staked</span>
+                  <span className="value">{prediction.stake} XLM</span>
+                </div>
+                <div className="status-item">
                   <span className="label">Ends In</span>
                   <span className="value">{prediction.timeframe}m</span>
                 </div>
@@ -192,7 +261,7 @@ export default function PredictionArena({ walletAddress, tokenBalance, refreshBa
               <h4>No active prediction</h4>
               <p>Choose an asset and timeframe to start earning.</p>
               <div className="mini-stats">
-                <span>🏆 Total Rewards: 124.5k XPOLL</span>
+                <span>🏆 Total Rewards: 124.5k XLM</span>
                 <span>🔥 Active Players: 842</span>
               </div>
             </div>

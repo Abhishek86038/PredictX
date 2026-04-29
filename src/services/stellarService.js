@@ -85,7 +85,7 @@ export const submitStakingTransaction = async (publicKey, amount) => {
     const fee = await server.fetchBaseFee();
 
     // Testnet staking vault address
-    const vaultAddress = "GBVVRXLOOBA5JXXJUS4D43FIOF6JUZ3QBSM3462TDK5L6VAMFCR5L6I5";
+    const vaultAddress = "GBXSZBSHVQIZGZCTS4RTENBM4Z3FXCRVJWKKWRIDVXKSVD447LDZIQKD";
 
     const transaction = new TransactionBuilder(account, {
       fee,

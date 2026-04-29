@@ -10,18 +10,18 @@ import './styles/predictor.css';
 
 function App() {
   const [walletAddress, setWalletAddress] = useState(null);
-  const [tokenBalance, setTokenBalance] = useState(0);
+  const [xlmBalance, setXlmBalance] = useState(0);
   const [activePage, setActivePage] = useState('arena');
 
   const handleWalletConnect = (address, balance) => {
     setWalletAddress(address);
-    setTokenBalance(balance !== undefined && balance !== null ? balance : 0);
+    setXlmBalance(balance !== undefined && balance !== null ? balance : 0);
   };
 
   const refreshBalance = useCallback(async () => {
     if (walletAddress) {
       const balance = await fetchXLMBalance(walletAddress);
-      setTokenBalance(parseFloat(balance));
+      setXlmBalance(parseFloat(balance));
     }
   }, [walletAddress]);
 
@@ -31,10 +31,19 @@ function App() {
         {/* Header */}
         <header className="app-header">
           <div className="logo-container">
-            <h1>🎯 XPOLL Predictor</h1>
+            <h1>🎯 PredictX</h1>
             <span className="network-badge">Stellar Testnet</span>
+            <span className="token-badge" title="1 XLM = 1 XPOLL (pegged 1:1)">XLM ⇄ XPOLL</span>
           </div>
-          <WalletConnect onConnect={handleWalletConnect} />
+          <div className="header-right">
+            {walletAddress && (
+              <div className="header-balance" title="Live XLM balance from your Stellar wallet">
+                <span className="balance-icon">⭐</span>
+                <span className="balance-amount">{parseFloat(xlmBalance).toFixed(2)} XLM</span>
+              </div>
+            )}
+            <WalletConnect onConnect={handleWalletConnect} />
+          </div>
         </header>
 
         {walletAddress ? (
@@ -79,7 +88,7 @@ function App() {
                   element={
                     <PredictionArena
                       walletAddress={walletAddress}
-                      tokenBalance={tokenBalance}
+                      xlmBalance={xlmBalance}
                       refreshBalance={refreshBalance}
                     />
                   }
@@ -89,7 +98,8 @@ function App() {
                   element={
                     <Dashboard
                       walletAddress={walletAddress}
-                      tokenBalance={tokenBalance}
+                      xlmBalance={xlmBalance}
+                      refreshBalance={refreshBalance}
                     />
                   }
                 />
@@ -108,7 +118,17 @@ function App() {
           <div className="no-wallet-container">
             <div className="hero-section">
               <h2>Master the Market Trends</h2>
-              <p>The ultimate gamified price prediction platform on Stellar. Stake XPOLL, predict movements, and earn rewards from real market data.</p>
+              <p>The ultimate gamified price prediction platform on Stellar. Stake XLM, predict movements, and earn rewards from real market data.</p>
+              <div className="hero-token-info">
+                <div className="token-explainer">
+                  <span className="te-icon">⭐</span>
+                  <span className="te-text">Uses your <strong>XLM wallet balance</strong> directly — no separate token swap needed</span>
+                </div>
+                <div className="token-explainer">
+                  <span className="te-icon">⇄</span>
+                  <span className="te-text"><strong>1 XLM = 1 XPOLL</strong> — platform points pegged 1:1 to XLM</span>
+                </div>
+              </div>
               <div className="hero-stats">
                 <div className="hero-stat">
                   <span className="stat-val">$24.5M+</span>
@@ -152,8 +172,29 @@ function App() {
               .hero-section p {
                 font-size: 1.25rem;
                 color: #666;
-                margin-bottom: 3rem;
+                margin-bottom: 2rem;
                 line-height: 1.6;
+              }
+              .hero-token-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                margin-bottom: 2.5rem;
+                align-items: center;
+              }
+              .token-explainer {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.75rem;
+                background: rgba(0, 102, 204, 0.06);
+                border: 1px solid rgba(0, 102, 204, 0.15);
+                padding: 0.6rem 1.2rem;
+                border-radius: 50px;
+                font-size: 0.95rem;
+                color: #444;
+              }
+              .te-icon {
+                font-size: 1.2rem;
               }
               .hero-stats {
                 display: flex;
@@ -192,23 +233,13 @@ function App() {
                 transform: translateY(-3px);
                 box-shadow: 0 15px 30px rgba(0, 102, 204, 0.3);
               }
-              .network-badge {
-                font-size: 0.7rem;
-                background: #E8F5E9;
-                color: #2E7D32;
-                padding: 2px 8px;
-                border-radius: 10px;
-                font-weight: 700;
-                margin-left: 10px;
-                vertical-align: middle;
-              }
             `}</style>
           </div>
         )}
 
         {/* Footer */}
         <footer className="app-footer">
-          <p>XPOLL Predictor © 2026 | Powered by Stellar Soroban & CoinGecko</p>
+          <p>PredictX © 2026 | Powered by Stellar Soroban & CoinGecko | 1 XPOLL = 1 XLM</p>
         </footer>
       </div>
     </Router>
