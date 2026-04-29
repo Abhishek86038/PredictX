@@ -421,3 +421,72 @@ body {
   }
   .col-winrate, .col-predictions { display: none; }
 }
+
+/* ===== SETTLE BUTTON FOR TESTING ===== */
+.btn-settle-test {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.btn-settle-test:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.prediction-card-wide {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.prediction-card-wide .card-left { flex: 1; }
+.prediction-card-wide .card-middle { flex: 1.5; display: flex; gap: 2rem; justify-content: center; }
+.prediction-card-wide .card-right { flex: 0.8; text-align: right; }
+
+.detail-row { display: flex; flex-direction: column; align-items: center; }
+.detail-row .label { font-size: 0.75rem; color: var(--secondary); text-transform: uppercase; }
+.detail-row .value { font-weight: 700; font-size: 1.1rem; }
+
+.live-box {
+  background: #e3f2fd;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid #90caf9;
+  text-align: center;
+}
+
+.live-label {
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.result-box {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+  min-width: 120px;
+}
+
+.result-box.won { background: #e8f5e9; color: var(--success); border: 1px solid #c8e6c9; }
+.result-box.lost { background: #ffebee; color: var(--danger); border: 1px solid #ffcdd2; }
+
+.result-label { font-weight: 800; font-size: 0.8rem; margin-bottom: 0.25rem; }
+.result-amount { font-weight: 700; font-size: 1.2rem; }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getUserPredictions } from '../services/predictionService';
+import { getUserPredictions, settlePrediction } from '../services/predictionService';
+import { getPriceData } from '../services/priceService';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function MyPredictions({ walletAddress }) {
@@ -24,6 +25,22 @@ export default function MyPredictions({ walletAddress }) {
       fetchPredictions();
     }
   }, [walletAddress, fetchPredictions]);
+
+  const handleSettle = async (pred) => {
+    try {
+      const currentPriceData = await getPriceData(pred.crypto);
+      const currentPrice = currentPriceData.usd;
+      
+      const won = pred.direction === 'up' 
+        ? currentPrice > pred.startPrice 
+        : currentPrice < pred.startPrice;
+
+      await settlePrediction(pred.id, currentPrice, won);
+      fetchPredictions(); // Refresh the list
+    } catch (error) {
+      console.error('Error settling prediction:', error);
+    }
+  };
 
   return (
     <div className="my-predictions-container">
@@ -97,7 +114,13 @@ export default function MyPredictions({ walletAddress }) {
                 ) : (
                   <div className="live-box">
                     <div className="live-label">LIVE</div>
-                    <div className="live-timer">Processing...</div>
+                    <button 
+                      className="btn-settle-test" 
+                      onClick={() => handleSettle(pred)}
+                      title="Check current result against live price"
+                    >
+                      Check Result
+                    </button>
                   </div>
                 )}
               </div>

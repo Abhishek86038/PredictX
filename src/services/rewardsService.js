@@ -1,33 +1,23 @@
-import { queryContract } from './stellar';
-import { nativeToScVal } from 'stellar-sdk';
-
-const CONTRACT_ID = import.meta.env.VITE_REWARDS_ADDRESS;
-
-export const getUserStats = async (walletAddress) => {
-  try {
-    const stats = await queryContract(CONTRACT_ID, 'get_user_stats', [nativeToScVal(walletAddress, { type: 'address' })]);
-    
-    if (stats) {
-      return {
-        wins: Number(stats[0]),
-        losses: Number(stats[1]),
-        profit: Number(stats[2]),
-        winRate: Number(stats[3]),
-        totalStaked: 0, // Simplified for MVP
-        recentPredictions: [] // Simplified
-      };
-    }
-    return { wins: 0, losses: 0, profit: 0, winRate: 0, totalStaked: 0, recentPredictions: [] };
-  } catch (error) {
-    console.error('Error fetching user stats:', error);
-    return { wins: 0, losses: 0, profit: 0, winRate: 0, totalStaked: 0, recentPredictions: [] };
-  }
+export const getUserStats = async (_walletAddress) => {
+  // Mock user stats
+  return {
+    wins: 15,
+    losses: 10,
+    profit: 450,
+    winRate: 60,
+    totalStaked: 1200,
+    recentPredictions: [
+      { crypto: 'bitcoin', won: true, amount: 100 },
+      { crypto: 'ethereum', won: false, amount: 50 },
+      { crypto: 'solana', won: true, amount: 75 },
+    ]
+  };
 };
 
 export const getReferralEarnings = async (_walletAddress) => {
-  return 0; // Simplified for MVP
+  return 125;
 };
 
 export const claimReferralBonus = async (_walletAddress) => {
-  return { success: true, amount: 0 };
+  return { success: true, amount: 125 };
 };

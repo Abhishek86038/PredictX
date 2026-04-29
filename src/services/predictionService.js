@@ -1,72 +1,68 @@
-import { callContract, queryContract } from './stellar';
-import { nativeToScVal } from 'stellar-sdk';
+// Prediction Service - Handles interaction with prediction contract/backend
 
-const CONTRACT_ID = import.meta.env.VITE_PREDICTION_ADDRESS;
+const PREDICTIONS_KEY = 'xpoll_predictions';
+
+const getStoredPredictions = () => {
+  const stored = localStorage.getItem(PREDICTIONS_KEY);
+  return stored ? JSON.parse(stored) : [];
+};
+
+const savePredictions = (predictions) => {
+  localStorage.setItem(PREDICTIONS_KEY, JSON.stringify(predictions));
+};
 
 export const createPrediction = async (walletAddress, crypto, timeframe, startPrice, direction, amount) => {
-  console.log('Creating real prediction:', { walletAddress, crypto, timeframe, startPrice, direction, amount });
+  console.log('Creating prediction:', { walletAddress, crypto, timeframe, startPrice, direction, amount });
   
-  try {
-    const args = [
-      nativeToScVal(crypto, { type: 'string' }),
-      nativeToScVal(parseInt(timeframe), { type: 'u32' }),
-      nativeToScVal(BigInt(Math.floor(startPrice * 100)), { type: 'i128' }), // Use cents for precision
-      nativeToScVal(BigInt(Math.floor(Date.now() / 1000)), { type: 'u64' }),
-      nativeToScVal(walletAddress, { type: 'address' })
-    ];
+  const newPrediction = {
+    id: Math.floor(Math.random() * 1000000),
+    walletAddress,
+    crypto,
+    timeframe,
+    startPrice,
+    direction,
+    stake: amount,
+    createdAt: new Date().toISOString(),
+    status: 'active', // 'active' or 'settled'
+    won: null,
+    reward: 0
+  };
 
-    const result = await callContract(CONTRACT_ID, 'create_prediction', args);
-    return { 
-      predictionId: result.hash, // Simplified for MVP
-      success: true 
-    };
-  } catch (error) {
-    console.error('Failed to create prediction:', error);
-    throw error;
-  }
+  const predictions = getStoredPredictions();
+  predictions.unshift(newPrediction);
+  savePredictions(predictions);
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ 
+        predictionId: newPrediction.id, 
+        success: true 
+      });
+    }, 1000);
+  });
 };
 
-export const placePrediction = async (walletAddress, predictionId, direction, amount) => {
-  try {
-    const args = [
-      nativeToScVal(parseInt(predictionId), { type: 'u32' }),
-      nativeToScVal(direction, { type: 'string' }),
-      nativeToScVal(BigInt(amount), { type: 'i128' }),
-      nativeToScVal(walletAddress, { type: 'address' })
-    ];
-
-    await callContract(CONTRACT_ID, 'place_prediction', args);
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to place prediction:', error);
-    throw error;
-  }
+export const getUserPredictions = async (walletAddress, filter = 'active') => {
+  const allPredictions = getStoredPredictions();
+  
+  // Filter by wallet address and status
+  return allPredictions.filter(p => 
+    p.walletAddress === walletAddress && 
+    (filter === 'active' ? p.status === 'active' : p.status === 'settled')
+  );
 };
 
-export const getUserPredictions = async (walletAddress, _filter = 'active') => {
-  try {
-    const count = await queryContract(CONTRACT_ID, 'get_count');
-    const predictions = [];
-    
-    for (let i = 1; i <= count; i++) {
-      const pred = await queryContract(CONTRACT_ID, 'get_prediction', [nativeToScVal(i, { type: 'u32' })]);
-      if (pred && (pred.creator === walletAddress || !walletAddress)) {
-        predictions.push({
-          id: pred.id,
-          crypto: pred.crypto,
-          direction: 'up', // Needs mapping from stake storage
-          startPrice: Number(pred.start_price) / 100,
-          stake: 0, // Needs mapping
-          timeframe: pred.timeframe,
-          createdAt: new Date(Number(pred.end_time) * 1000 - pred.timeframe * 60000).toISOString(),
-          won: pred.settled ? true : null,
-          reward: 0
-        });
-      }
-    }
-    return predictions;
-  } catch (error) {
-    console.error('Error fetching predictions:', error);
-    return [];
+export const settlePrediction = async (predictionId, endPrice, won) => {
+  const predictions = getStoredPredictions();
+  const index = predictions.findIndex(p => p.id === predictionId);
+  
+  if (index !== -1) {
+    predictions[index].status = 'settled';
+    predictions[index].won = won;
+    predictions[index].endPrice = endPrice;
+    predictions[index].reward = won ? predictions[index].stake * 1.8 : 0;
+    savePredictions(predictions);
   }
+  
+  return { success: true };
 };
