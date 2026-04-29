@@ -1,11 +1,12 @@
 export default function StatCard({ title, value, subtitle, icon, color }) {
+  // Pass color as a custom property to be used by CSS
   return (
-    <div className="stat-card" style={{ borderLeft: `4px solid ${color}` }}>
-      <div className="stat-icon" style={{ fontSize: '2rem' }}>{icon}</div>
+    <div className="stat-card" style={{ '--accent-color': color }}>
+      <div className="stat-icon">{icon}</div>
       <div className="stat-content">
-        <p className="stat-title" style={{ margin: 0, fontSize: '0.8rem', color: '#666', textTransform: 'uppercase' }}>{title}</p>
-        <p className="stat-value" style={{ margin: '4px 0', fontSize: '1.5rem', fontWeight: 'bold' }}>{value}</p>
-        {subtitle && <p className="stat-subtitle" style={{ margin: 0, fontSize: '0.75rem', color: '#999' }}>{subtitle}</p>}
+        <p className="stat-title">{title}</p>
+        <p className="stat-value">{value}</p>
+        {subtitle && <p className="stat-subtitle">{subtitle}</p>}
       </div>
     </div>
   );
