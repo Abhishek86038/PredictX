@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@albedo-link/intent": "^0.13.0",
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/wallet-sdk": "^0.11.2",
     "axios": "^1.15.2",

@@ -1,8 +1,9 @@
 import { 
   isConnected, 
-  signTransaction,
+  signTransaction as signFreighter,
   requestAccess
 } from "@stellar/freighter-api";
+import albedo from '@albedo-link/intent';
 import { 
   Horizon, 
   TransactionBuilder, 
@@ -14,12 +15,11 @@ import {
 const NETWORK_URL = "https://horizon-testnet.stellar.org";
 const server = new Horizon.Server(NETWORK_URL);
 
-// Freighter API v6 returns objects, not raw values. These helpers unwrap them safely.
+let activeWallet = null;
 
 export const checkWalletConnection = async () => {
   try {
     const result = await isConnected();
-    // v6: { isConnected: boolean }, v5: boolean
     if (typeof result === 'object' && result !== null) {
       return result.isConnected === true;
     }
@@ -29,32 +29,48 @@ export const checkWalletConnection = async () => {
   }
 };
 
-export const connectWallet = async () => {
+export const connectWallet = async (walletName = 'Freighter') => {
   try {
-    const connected = await checkWalletConnection();
-    if (!connected) {
-      throw new Error("Freighter wallet not installed or not connected. Please install the Freighter extension.");
-    }
+    if (walletName === 'Freighter') {
+      const connected = await checkWalletConnection();
+      if (!connected) {
+        throw new Error("Freighter wallet not installed or not connected. Please install the Freighter extension.");
+      }
 
-    const result = await requestAccess();
+      const result = await requestAccess();
+      let publicKey;
+      if (typeof result === 'object' && result !== null && result.address) {
+        publicKey = result.address;
+      } else if (typeof result === 'string') {
+        publicKey = result;
+      } else {
+        throw new Error("Failed to get wallet address from Freighter.");
+      }
 
-    // v6: { address: string }, v5: string directly
-    let publicKey;
-    if (typeof result === 'object' && result !== null && result.address) {
-      publicKey = result.address;
-    } else if (typeof result === 'string') {
-      publicKey = result;
+      if (!publicKey || publicKey.length < 10) throw new Error("Invalid wallet address returned.");
+      activeWallet = 'Freighter';
+      return publicKey;
+
+    } else if (walletName === 'Albedo') {
+      const res = await albedo.publicKey({});
+      if (!res || !res.pubkey) throw new Error("Failed to get wallet address from Albedo.");
+      activeWallet = 'Albedo';
+      return res.pubkey;
+
+    } else if (walletName === 'Rabet') {
+      if (!window.rabet) {
+        throw new Error("Rabet wallet not installed. Please install the Rabet extension.");
+      }
+      const res = await window.rabet.connect();
+      if (!res || !res.publicKey) throw new Error("Failed to get wallet address from Rabet.");
+      activeWallet = 'Rabet';
+      return res.publicKey;
+      
     } else {
-      throw new Error("Failed to get wallet address from Freighter.");
+      throw new Error("Unsupported wallet.");
     }
-
-    if (!publicKey || publicKey.length < 10) {
-      throw new Error("Invalid wallet address returned.");
-    }
-
-    return publicKey;
   } catch (error) {
-    console.error("Wallet connection error:", error);
+    console.error(`Wallet connection error (${walletName}):`, error);
     throw error;
   }
 };
@@ -81,10 +97,10 @@ export const getStellarAccount = async (publicKey) => {
 
 export const submitStakingTransaction = async (publicKey, amount) => {
   try {
+    if (!activeWallet) throw new Error("No active wallet connected.");
+
     const account = await server.loadAccount(publicKey);
     const fee = await server.fetchBaseFee();
-
-    // Testnet staking vault address
     const vaultAddress = "GBXSZBSHVQIZGZCTS4RTENBM4Z3FXCRVJWKKWRIDVXKSVD447LDZIQKD";
 
     const transaction = new TransactionBuilder(account, {
@@ -102,20 +118,26 @@ export const submitStakingTransaction = async (publicKey, amount) => {
       .build();
 
     const txXdr = transaction.toXDR();
-
-    const signResult = await signTransaction(txXdr, {
-      network: 'TESTNET',
-      networkPassphrase: Networks.TESTNET,
-    });
-
-    // v6: { signedTxXdr: string }, v5: string directly
     let signedTxXdr;
-    if (typeof signResult === 'object' && signResult !== null && signResult.signedTxXdr) {
-      signedTxXdr = signResult.signedTxXdr;
-    } else if (typeof signResult === 'string') {
-      signedTxXdr = signResult;
-    } else {
-      throw new Error("Failed to sign transaction.");
+
+    if (activeWallet === 'Freighter') {
+      const signResult = await signFreighter(txXdr, {
+        network: 'TESTNET',
+        networkPassphrase: Networks.TESTNET,
+      });
+      if (typeof signResult === 'object' && signResult !== null && signResult.signedTxXdr) {
+        signedTxXdr = signResult.signedTxXdr;
+      } else if (typeof signResult === 'string') {
+        signedTxXdr = signResult;
+      } else {
+        throw new Error("Failed to sign transaction with Freighter.");
+      }
+    } else if (activeWallet === 'Albedo') {
+      const res = await albedo.tx({ xdr: txXdr, network: 'testnet' });
+      signedTxXdr = res.signed_envelope_xdr;
+    } else if (activeWallet === 'Rabet') {
+      const res = await window.rabet.sign(txXdr, 'testnet');
+      signedTxXdr = res.xdr;
     }
 
     const signedTx = TransactionBuilder.fromXDR(signedTxXdr, Networks.TESTNET);
