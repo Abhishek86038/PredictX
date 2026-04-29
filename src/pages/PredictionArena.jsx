@@ -4,7 +4,7 @@ import { getPriceData } from '../services/priceService';
 import ToastNotification from '../components/ToastNotification';
 import PriceChart from '../components/PriceChart';
 
-export default function PredictionArena({ walletAddress, tokenBalance }) {
+export default function PredictionArena({ walletAddress, tokenBalance, refreshBalance }) {
   const [selectedCrypto, setSelectedCrypto] = useState('bitcoin');
   const [selectedTimeframe, setSelectedTimeframe] = useState(60);
   const [stakeAmount, setStakeAmount] = useState('');
@@ -44,7 +44,7 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
     }
 
     if (stakeAmount > tokenBalance) {
-      setNotification({ type: 'error', message: 'Insufficient XPOLL balance' });
+      setNotification({ type: 'error', message: 'Insufficient balance' });
       return;
     }
 
@@ -71,10 +71,16 @@ export default function PredictionArena({ walletAddress, tokenBalance }) {
 
       setNotification({
         type: 'success',
-        message: `Prediction created! Staked ${stakeAmount} XPOLL on ${direction.toUpperCase()}`
+        message: `Prediction created! Staked ${stakeAmount} XLM on ${direction.toUpperCase()}`
       });
 
       setStakeAmount('');
+      
+      // Refresh the user's actual XLM balance after the stake transaction succeeds
+      if (refreshBalance) {
+        await refreshBalance();
+      }
+
     } catch (error) {
       setNotification({ type: 'error', message: error.message });
     } finally {

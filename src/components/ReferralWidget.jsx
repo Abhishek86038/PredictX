@@ -5,7 +5,7 @@ export default function ReferralWidget({ walletAddress, referralEarnings }) {
   const [copied, setCopied] = useState(false);
   const [notification, setNotification] = useState(null);
 
-  const referralLink = `${window.location.origin}?ref=${walletAddress ? walletAddress.substring(0, 10) : ''}...`;
+  const referralLink = walletAddress ? `${window.location.origin}?ref=${walletAddress}` : window.location.origin;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(referralLink);

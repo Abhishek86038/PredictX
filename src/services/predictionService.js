@@ -1,4 +1,5 @@
 // Prediction Service - Handles interaction with prediction contract/backend
+import { submitStakingTransaction } from './stellarService';
 
 const PREDICTIONS_KEY = 'xpoll_predictions';
 
@@ -14,6 +15,17 @@ const savePredictions = (predictions) => {
 export const createPrediction = async (walletAddress, crypto, timeframe, startPrice, direction, amount) => {
   console.log('Creating prediction:', { walletAddress, crypto, timeframe, startPrice, direction, amount });
   
+  // Submit the real transaction to deduct funds!
+  try {
+    const txResponse = await submitStakingTransaction(walletAddress, amount);
+    if (!txResponse.successful) {
+      throw new Error("Transaction failed on the network.");
+    }
+  } catch (error) {
+    console.error("Staking transaction error:", error);
+    throw new Error("Failed to stake amount: " + error.message, { cause: error });
+  }
+
   const newPrediction = {
     id: Math.floor(Math.random() * 1000000),
     walletAddress,
@@ -32,14 +44,10 @@ export const createPrediction = async (walletAddress, crypto, timeframe, startPr
   predictions.unshift(newPrediction);
   savePredictions(predictions);
 
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ 
-        predictionId: newPrediction.id, 
-        success: true 
-      });
-    }, 1000);
-  });
+  return { 
+    predictionId: newPrediction.id, 
+    success: true 
+  };
 };
 
 export const getUserPredictions = async (walletAddress, filter = 'active') => {

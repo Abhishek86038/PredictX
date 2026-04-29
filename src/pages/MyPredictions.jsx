@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { getUserPredictions, settlePrediction } from '../services/predictionService';
 import { getPriceData } from '../services/priceService';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -70,7 +71,11 @@ export default function MyPredictions({ walletAddress }) {
         <div className="empty-state">
           <div className="empty-icon">📭</div>
           <p>No {filter} predictions found</p>
-          {filter === 'active' && <button className="btn-primary">Start Predicting</button>}
+          {filter === 'active' && (
+            <Link to="/">
+              <button className="btn-primary">Start Predicting</button>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="predictions-list">

@@ -1,22 +1,29 @@
-// XPOLL Predictor - Production Ready v1.0
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import WalletConnect from './components/WalletConnect';
 import PredictionArena from './pages/PredictionArena';
 import Leaderboard from './pages/Leaderboard';
 import Dashboard from './pages/Dashboard';
 import MyPredictions from './pages/MyPredictions';
+import { fetchXLMBalance } from './services/stellarService';
 import './styles/predictor.css';
 
 function App() {
   const [walletAddress, setWalletAddress] = useState(null);
-  const [tokenBalance, setTokenBalance] = useState(1000);
+  const [tokenBalance, setTokenBalance] = useState(0);
   const [activePage, setActivePage] = useState('arena');
 
   const handleWalletConnect = (address, balance) => {
     setWalletAddress(address);
-    setTokenBalance(balance || 1000);
+    setTokenBalance(balance !== undefined && balance !== null ? balance : 0);
   };
+
+  const refreshBalance = useCallback(async () => {
+    if (walletAddress) {
+      const balance = await fetchXLMBalance(walletAddress);
+      setTokenBalance(parseFloat(balance));
+    }
+  }, [walletAddress]);
 
   return (
     <Router>
@@ -73,6 +80,7 @@ function App() {
                     <PredictionArena
                       walletAddress={walletAddress}
                       tokenBalance={tokenBalance}
+                      refreshBalance={refreshBalance}
                     />
                   }
                 />
