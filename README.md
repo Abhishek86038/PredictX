@@ -15,11 +15,11 @@
 
 | User Name | Email ID | Wallet Address |
 |-----------|----------|----------------|
-| Subhranil | subhranilbaul2017@gmail.com | GBTOPBOVCF5652TCZMN4YDMSBTM... |
-| Dikansha Bindal | bindaldikansha@gmail.com | GB66XSKCNNHE6GUYA7BENANHHUKC... |
-| Abhishek Gupta | abhishekgupta0834@gmail.com | GBEA2LH5VILCEKQC6M77GXGJ3CPJ... |
-| Jayant Vaibhav | jayantvaibhavspj@gmail.com | GBQI6DPFRFZMTDO4KFUPB5D2F6WC... |
-| Shashank Rai | shashankrai283@gmail.com | GD5CCTX45O4DWDT3OQ6IYDH2SK55... |
+| Subhranil | subhranilbaul2017@gmail.com | GBTOPBOVCF5652TCZMN4YDMSBTMYKX7HAA7LBMBBFFDBARZJIY5DHGIN |
+| Dikansha Bindal | bindaldikansha@gmail.com | GB66XSKCNNHE6GUYA7BENANHHUKCHZVEFIBVVFJHAP4OHJ62HVANQEEZ |
+| Abhishek Gupta | abhishekgupta0834@gmail.com |GBEA2LH5VILCEKQC6M77GXGJ3CPJOOMGEKNMMNXQXMJA42BMPX4YSN72 |
+| Jayant Vaibhav | jayantvaibhavspj@gmail.com | GBQI6DPFRFZMTDO4KFUPB5D2F6WCQOZEGEBE7OTBHVXXLD76BJFQN4SR |
+| Shashank Rai | shashankrai283@gmail.com | GD5CCTX45O4DWDT3OQ6IYDH2SK55AGNNSPGWSQMPO5S2WFAIIVTUSWCU |
 
 ---
 
@@ -27,11 +27,11 @@
 
 | User Name | Email ID | Wallet Address | Feedback Implemented | Commit ID |
 |-----------|----------|----------------|----------------------|-----------|
-| Subhranil | subhranilbaul2017@gmail.com | GBTOPBOVCF5652TCZMN4YDMSBTM... | I currently have balance in XLM, but your website is supporting XPOLL, so this part needs more focus for better balance and token handling. | ffeb609 |
-| Dikansha Bindal | bindaldikansha@gmail.com | GB66XSKCNNHE6GUYA7BENANHHUKC... | UI can be more interactive | 1e8d7b5 |
-| Abhishek Gupta | abhishekgupta0834@gmail.com | GBEA2LH5VILCEKQC6M77GXGJ3CPJ... | Add smooth loading animations or skeleton effects instead of simple loading text. | 5362a53 |
-| Jayant Vaibhav | jayantvaibhavspj@gmail.com | GBQI6DPFRFZMTDO4KFUPB5D2F6WC... | Added better transaction visibility and wallet action improvements | da82efa |
-| Shashank Rai | shashankrai283@gmail.com | GD5CCTX45O4DWDT3OQ6IYDH2SK55... |The UI looks too simple right now, please make it more premium and modern. | df9d898 |
+| Subhranil | subhranilbaul2017@gmail.com | GBTOPBOVCF5652TCZMN4YDMSBTMYKX7HAA7LBMBBFFDBARZJIY5DHGIN | I currently have balance in XLM, but your website is supporting XPOLL, so this part needs more focus for better balance and token handling. | ffeb609 |
+| Dikansha Bindal | bindaldikansha@gmail.com | GB66XSKCNNHE6GUYA7BENANHHUKCHZVEFIBVVFJHAP4OHJ62HVANQEEZ | UI can be more interactive | 1e8d7b5 |
+| Abhishek Gupta | abhishekgupta0834@gmail.com | GBEA2LH5VILCEKQC6M77GXGJ3CPJOOMGEKNMMNXQXMJA42BMPX4YSN72 | Add smooth loading animations or skeleton effects instead of simple loading text. | 5362a53 |
+| Jayant Vaibhav | jayantvaibhavspj@gmail.com | GBQI6DPFRFZMTDO4KFUPB5D2F6WCQOZEGEBE7OTBHVXXLD76BJFQN4SR | Added better transaction visibility and wallet action improvements | da82efa |
+| Shashank Rai | shashankrai283@gmail.com | GD5CCTX45O4DWDT3OQ6IYDH2SK55AGNNSPGWSQMPO5S2WFAIIVTUSWCU |The UI looks too simple right now, please make it more premium and modern. | df9d898 |
 
 ### Live Demo link  :-   https://predict-x-pied.vercel.app/leaderboard
 
